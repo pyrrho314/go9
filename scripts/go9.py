@@ -118,11 +118,14 @@ def do_cmd(cmd = None, targ = None):
         elif targ in dct:
             print "cd %s" % dct[targ]["path"]
         else:
-            print 'echo "No go_name == %s"' % targ
+            print 'echo \"No go_name == {targ}\"'.format(targ=targ)
     elif cmd == "list":
         keys = dct.keys()
         keys.sort()
+        maxkeylen = len(max(keys, key= lambda p: len(p)))+5
+        
         for key in keys:
-            print 'echo "{key} ==> {path}";\n'.format(key=key, path=dct[key]["path"])
+            print 'echo "{pad}{key: >10} ==> {path}";\n'.format(pad = "."*(maxkeylen-len(key)),
+                                                                key=key, path=dct[key]["path"])
 
 do_cmd(cmd, targ)
