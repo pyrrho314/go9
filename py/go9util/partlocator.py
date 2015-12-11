@@ -1,6 +1,6 @@
 import re
-from astrodata.adutils import ksutil
-from astrodata.adutils import termcolor as tc
+import ksutil
+import termcolor as tc
 
 class BadAddr:
     msg = "Bad Address"
