@@ -1,0 +1,14 @@
+# purpose is to add the paths only once in an environment where
+# dpenv, etc are meant to be liberally sourced
+
+newp=$1
+case ":$PYTHONPATH:" in
+    *":$newp:"*) :;;
+    *)  if [[ "$PYTHONPATH" != "" ]]
+            then
+                export PYTHONPATH="$newp:$PYTHONPATH"
+            else
+                export PYTHONPATH="$newp"
+        fi
+        ;;
+esac
