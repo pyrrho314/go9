@@ -127,5 +127,18 @@ def do_cmd(cmd = None, targ = None):
         for key in keys:
             print 'echo "{pad}{key: >10} ==> {path}";\n'.format(pad = "."*(maxkeylen-len(key)),
                                                                 key=key, path=dct[key]["path"])
-
+    elif cmd == "editall":
+        from glob import glob
+        jss   = " ".join(glob("*.js"))
+        htmls = " ".join(glob("*.html"))
+        pys   = " ".join(glob("*.py"))
+        shs   = " ".join(glob("*.sh"))
+        print 'ne {jss} {htmls} {pys} {shs}'.format(
+                jss=jss, htmls=htmls, pys = pys, shs = shs)
+                
+    elif cmd == "pretty":
+        from glob import glob
+        junk = " ".join(glob("*~"))
+        print 'rm {junk}'.format(junk = junk)
+        
 do_cmd(cmd, targ)
