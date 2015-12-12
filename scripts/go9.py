@@ -136,7 +136,7 @@ def do_cmd(cmd = None, targ = None):
         print 'ne {jss} {htmls} {pys} {shs}'.format(
                 jss=jss, htmls=htmls, pys = pys, shs = shs)
                 
-    elif cmd == "pretty":
+    elif cmd == "rmturds":
         from glob import glob
         junk = " ".join(glob("*~"))
         print 'rm {junk}'.format(junk = junk)
