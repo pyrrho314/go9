@@ -112,21 +112,6 @@ def do_cmd(cmd = None, targ = None):
             config.save()
         else:
             err("No target name!")
-    elif cmd == "go":
-        if targ == None:
-            do_cmd("list")
-        elif targ in dct:
-            print "cd %s" % dct[targ]["path"]
-        else:
-            print 'echo \"No go_name == {targ}\"'.format(targ=targ)
-    elif cmd == "list":
-        keys = dct.keys()
-        keys.sort()
-        maxkeylen = len(max(keys, key= lambda p: len(p)))+5
-        
-        for key in keys:
-            print 'echo "{pad}{key: >10} ==> {path}";\n'.format(pad = "."*(maxkeylen-len(key)),
-                                                                key=key, path=dct[key]["path"])
     elif cmd == "editall":
         from glob import glob
         jss   = " ".join(glob("*.js"))
@@ -135,7 +120,48 @@ def do_cmd(cmd = None, targ = None):
         shs   = " ".join(glob("*.sh"))
         print 'ne {jss} {htmls} {pys} {shs}'.format(
                 jss=jss, htmls=htmls, pys = pys, shs = shs)
-                
+    elif cmd == "exportdirs":
+        targs = dct.keys()
+        for targx in targs:
+            print "export GO9DIR_{targ}={path};".format(targ=targx, path=dct[targx]["path"])
+    elif cmd == "go":
+        if targ == None:
+            do_cmd("list")
+        elif targ in dct:
+            print "cd %s" % dct[targ]["path"]
+        else:
+            print 'echo \"No go_name == {targ}\"'.format(targ=targ)
+    elif cmd == "gotargets":
+        targs = dct.keys()
+        targs.sort()
+        if targ == "export":
+            print " ".join(targs)
+        else:
+            for targstr in targs:
+                print "echo \"%s\";\n" % targstr
+    elif cmd == "list":
+        keys = dct.keys()
+        keys.sort()
+        maxkeylen = len(max(keys, key= lambda p: len(p)))+1
+        keyfrag = "{key: >%d}" % maxkeylen
+        for key in keys:
+            formstr = 'echo "%s ==> {path}";\n' % keyfrag
+            print formstr.format(
+                            key=key, path=dct[key]["path"])
+    elif cmd == "listcmds":
+        cmds = ["add",
+                "go",
+                "editall",
+                "exportdirs",
+                "gotargets",
+                "list",
+                "listcmds",
+                "rmturds"]
+        if targ == "export":
+            print " ".join(cmds)
+        else:
+            for cmdstr in cmds:
+                print "echo \"%s\";\n" % cmdstr
     elif cmd == "rmturds":
         from glob import glob
         junk = " ".join(glob("*~"))
