@@ -17,8 +17,14 @@ go()
     eval "$answer"
 }
 
+thisis()
+{
+    answer="$(go9.py add $*)"
+    eval "$answer"
+}
+
 # add exports for dirs
-answer=$(go9.py direxports)
+answer=$(go9.py exportdirs)
 eval "$answer"
 
 GO9_subcmds=$(go9.py listcmds export)
