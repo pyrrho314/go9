@@ -10,18 +10,21 @@ go9() {
     answer="$(go9.py $*)"
     eval "$answer"
 }
+export -f go9
 
 go()
 {
     answer="$(go9.py go $*)"
     eval "$answer"
 }
+export -f go
 
 thisis()
 {
     answer="$(go9.py add $*)"
     eval "$answer"
 }
+export -f thisis
 
 # add exports for dirs
 answer=$(go9.py exportdirs)
@@ -42,14 +45,8 @@ local cur prev
             COMPREPLY=($(compgen -W "$GO9_subcmds" ${cur}))
             ;;
         2)
-            case ${prev} in
-                configure)
-                    COMPREPLY=($(compgen -W "CM DSP NPU" ${cur}))
-                    ;;
-                show)
-                    COMPREPLY=($(compgen -W "some other args" ${cur}))
-                    ;;
-            esac
+            words=$(go9.py --export listsubcmds ${prev})
+            COMPREPLY=($(compgen -W "$words" ${cur}))
             ;;
         *)
             COMPREPLY=()

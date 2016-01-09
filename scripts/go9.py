@@ -7,13 +7,16 @@ from go9util.ksutil import dict2pretty
 def err(msg):
     sys.stderr.write(msg)
     sys.stderr.write("\n")
+error = err
     
 info = err
 
 class Config(object):
     _cfg_dict = None
     filename = None
-    def __init__(self, cfgdict):
+    cliargs = None
+    def __init__(self, cfgdict, cmdline_args = None):
+        cliargs = cmdline_args
         try:
             if isinstance(cfgdict, basestring):
                 self.filename = cfgdict
@@ -26,6 +29,7 @@ class Config(object):
         except:
             self._cfg_dict = {"paths":[]}
                 #info(dict2pretty("_cfg_dict", self._cfg_dict))
+        self.cliargs = cliargs
         
     def get(self, key, default = None):
         retval = partlocator.get_property(self._cfg_dict, key)
@@ -50,69 +54,55 @@ class Config(object):
         else:
             sys.stderr("Can't Save, no filename\n")
 
-
-parser = argparse.ArgumentParser(description="Helper for go9 environment.")
-parser.add_argument("cmd", default=None, nargs = "?",
-                    help="Path(s) to recurse for targets.")
-parser.add_argument("target", default=None, nargs = "?",
-                    help="The target of the command")
-parser.add_argument("--config", default=None, 
-                    help="Config file to load")
-                    
-args = parser.parse_args()
-
-bashlines = []
-exportlines = []
-
-go9cfg = None
-pathslist = []
-
-userhome   = os.path.expanduser("~")
-check1     = os.path.join(userhome,".config/go9.conf")
-check2     = os.path.join(userhome,".go9")
-configname = None
-config = None
-
-if args.config != None:
-    configname = args.config
-elif os.path.exists(check1):
-    configname = check1
-elif os.path.exists(check2):
-    configname = check2
-else:
-    raise Exception(
-        "NO ARGUMENTS, NO CONFIG\n"
-        "  place a .go9 file in $HOME or go9.conf in $HOME/.config")
-
-try:
-    #  info("loading %s" % configname)
-    config = Config(configname)
-except:
-    #Exception("Can't Load %s" % configname)
-    err("Can't Load %s" % configname)
-    raise
-
-cmd = args.cmd if args.cmd else "list"
-targ = args.target
-
-
-# info(config.pretty()) 
-paths = config.get("paths")
-dct = {}
-for pth in paths:
-    pthi = 0
-    goname = pth["go_name"]
-    if goname in dct:
-        pthi += 1
-    if pthi >0:
-        goname += ".%d" %pthi
+class Go9Command(object):
+    go9dict = None
+    userhome = None
+    cfg1 = None
+    cfg2 = None
+    paths = None
+    # cmddict filled near cmd functions, see below
+    cmddict = {}
+    def __init__(self, config):
         
-    dct[goname] = pth
+        bashlines = []
+        exportlines = []
 
-def do_cmd(cmd = None, targ = None):
-    global paths, dct, config
-    
-    if cmd == "add":
+        go9cfg = None
+        pathslist = []
+
+        
+        # info(config.pretty()) 
+        self.config = config
+        self.paths = paths = config.get("paths")
+        self.go9dict = dct = {}
+        for pth in paths:
+            pthi = 0
+            goname = pth["go_name"]
+            if goname in dct:
+                pthi += 1
+            if pthi >0:
+                goname += ".%d" %pthi
+                
+            dct[goname] = pth
+
+    def do_cmd(self, cmd = None, targ = None):
+        paths  = self.paths
+        dct    = self.go9dict
+        config = self.config
+        
+        cmdlist = self.cmddict.keys()
+        
+        if cmd in cmdlist:
+            cmddef = self.cmddict[cmd]
+            if not isinstance(cmddef, dict):
+                cmddef = {"function": cmddef}
+            
+            cmddef["function"](self, cmd, targ)
+        else:
+            error("No such command: %s" % cmd)
+    def add(self, cmd,targ):
+        dct = self.cmddict
+        paths = self.paths
         curpath = os.getcwd()
         if targ:
             numvers = 0
@@ -134,7 +124,14 @@ def do_cmd(cmd = None, targ = None):
                 print 'GO9_go_targets="$(go9.py gotargets export)"'
         else:
             err("No target name!")
-    elif cmd == "delete":
+    cmddict["add"] = {"function": add,
+                        "help": """
+go9 add <dir_key>
+    Used to add current directory
+                        """.strip()
+                      }
+    def delete(self, cmd, targ):
+        dct = self.cmddict
         removedone = False
         newlist = []
         rmlist = []
@@ -151,7 +148,15 @@ def do_cmd(cmd = None, targ = None):
             rml.extend(rmlist)
             config.save()
         print 'GO9_go_targets="$(go9.py gotargets export)"'
-    elif cmd == "editall":
+    cmddict["delete"] = {"function": delete,
+                        "help": """
+go9 delete <dir_key>
+    Used to delete a directory from the go table.
+                        """.strip()
+                      }
+    
+    def editall(self, cmd, targ):
+        dct = self.cmddict
         from glob import glob
         Ajss = []
         Ahtmls = []
@@ -183,19 +188,67 @@ def do_cmd(cmd = None, targ = None):
                     jss=jss, htmls=htmls, pys = pys, shs = shs)
         else:
             info ("no appropriate files found")
-    elif cmd == "exportdirs":
+    cmddict["editall"] = {"function":editall,
+                            "subcmds": ["recurse"],
+                            "help": """
+go9 editall [recurse]
+    Used to edit all appropriate file types. If recurse present, go 
+    through sub-directories.  Currently the file types and editor
+    is hardcoded. TODO: set edit command and extensions in .go9 config.
+                                 """.strip()
+                            }
+     
+    def exportdirs(self, cmd, targ):
+        dct = self.go9dict
         targs = dct.keys()
         for targx in targs:
             targx = targx.replace(".","_")
             print "export GO9DIR_{targ}={path};".format(targ=targx, path=dct[targx]["path"])
-    elif cmd == "go":
+    cmddict["exportdirs"] = {"function": exportdirs,
+                             "help":"""
+go9 exportdirs
+    Used to create bash environment variables for each go9 
+    directory. The vars are of the form GO9DIR_<dir_key>.
+                                    """.strip()
+                            }
+    def help(self, cmd, targ):
+        if targ in self.cmddict:
+            cd = self.cmddict[targ]
+            if "help" in cd:
+                info(cd["help"])
+            else:
+                info ("Sorry, no info on '%s'" % targ)
+        else:
+            info("go9 commands")
+            cmds = self.cmddict.keys()
+            cmds.sort()
+            info("\t%s" % "\n\t".join(cmds))
+    cmddict["help"] = {"function":help,
+                       "help": """
+go9 help <go9_cmd>
+    Used to get information about the commands in go9 tool.
+
+                        """.strip()
+                       }
+    
+    def go(self, cmd, targ):
+        dct = self.go9dict
         if targ == None:
-            do_cmd("list")
+            self.do_cmd("list")
         elif targ in dct:
             print "cd %s" % dct[targ]["path"]
         else:
             print 'echo \"No go_name == {targ}\"'.format(targ=targ)
-    elif cmd == "gotargets":
+    cmddict["go"] = {"function": go,
+                    "help": """
+go9 go <dir_key>
+go <dir_key>
+    Used to change to a target directory. If <dir_key> is
+    absent, all targets will be listed.
+                            """.strip()
+                    }
+    def gotargets(self, cmd, targ):
+        dct = self.go9dict
         targs = dct.keys()
         targs.sort()
         if targ == "export":
@@ -203,7 +256,10 @@ def do_cmd(cmd = None, targ = None):
         else:
             for targstr in targs:
                 print "echo \"%s\";\n" % targstr
-    elif cmd == "list":
+    cmddict["gotargets"] = gotargets
+    
+    def list(self, cmd, targ):
+        dct = self.go9dict
         keys = dct.keys()
         keys.sort()
         maxkeylen = len(max(keys, key= lambda p: len(p)))+1
@@ -216,48 +272,130 @@ def do_cmd(cmd = None, targ = None):
                 formstr = 'echo "%s ==> {path}";\n' % keyfrag
                 print formstr.format(
                                 key=key, path=dct[key]["path"])
-    elif cmd == "listcmds":
-        cmds = ["add",
-                "go",
-                "delete",
-                "editall",
-                "exportdirs",
-                "gotargets",
-                "list",
-                "listcmds",
-                "saverun",
-                "refresh",
-                "rmturds"]
+    cmddict["list"] = list
+
+    def listcmds(self, cmd, targ):
+        autocmds = self.cmddict.keys()
+        cmds = []
+        cmds.extend(autocmds)
         if targ == "export":
             print " ".join(cmds)
         else:
             for cmdstr in cmds:
                 print "echo \"%s\";\n" % cmdstr
-    elif cmd == "refresh":
-        print 'GO9_go_targets="$(go9.py gotargets export)"'
-        do_cmd("exportdirs")
-    elif cmd == "rmturds":
+    cmddict["listcmds"] = listcmds
+    
+    def listsubcmds(self, cmd, targ):
+        if targ in self.cmddict:
+            subcmds = None
+            cmdict = self.cmddict[targ]
+            if isinstance(cmdict, dict):
+                subcmds = cmdict["subcmds"] if "subcmds" in cmdict else None
+            
+            if self.config.cliargs.export:
+                if subcmds and len(subcmds) > 0:
+                    print " ".join(subcmds)
+            else:
+                if subcmds and len(subcmds) > 0:
+                    print 'echo "%s"' % " ".join(subcmds)
+            
+    cmddict["listsubcmds"] = { "function": listsubcmds
+                            }
+        
+    def rmturds(self, cmd, targ):
         from glob import glob
         junk = " ".join(glob("*~"))
         print 'rm {junk}'.format(junk = junk)
-    elif cmd == "run_dir_cmd":
+    cmddict["rmturds"] = rmturds
+    
+    def rundircmd(self, cmd, targ):
         pass
-    elif cmd == "saverun":
+    cmddict["rundircmd"] = rundircmd
+    
+    def saverun_cmd(self, cmd, targ):
+        import subprocess
+        outbuff = ''
+        dct = self.go9dict
         # get's previous command and trims it.
-        lastcmd = 'history 2 | cut -d " " -f 3- | head -n 3 | sed -e "s/^[[:space:]]*//g" -e "s/[[:space:]]*\$//g"'
-        info("Use Last Command? %s" % lastcmd)
-        info("[Y,n]:")
-        try:
-            answer = raw_input()
-        except KeyboardInterrupt:
-            info("Exit")
-        answer = answer.strip()
-        if len(answer) == 0 or answer.lower() == "y":
-            info("do the command work")
-            print "_GO9_lastcmd=$({lastcmd})".format(lastcmd=lastcmd)
-        else:
-            info("Not saved.")
+        # How lastcmd works:
+        #   get history of 2 steps, cut off the history #, 
         
-    else:
-        info("Unknown command: %s" % cmd)
-do_cmd(cmd, targ)
+        lastcmd  = 'history 2 | cut -d " " -f 3- | head -n 1 | sed -e "s/^[[:space:]]*//g" -e "s/[[:space:]]*\$//g"'
+        outbuff = '_GO9_lastcmd="$({lastcmd})"\n'.format(lastcmd=lastcmd)
+        outbuff += (
+'''read -p "Use '$_GO9_lastcmd' (y/n)?" choice
+case "$choice" in
+   y|Y ) 
+        go9 set_dir_cmd "$_GO9_lastcmd";;
+   n|N )
+        echo "Ok nvm.";;
+   "" ) echo "what?";;
+   * ) 
+        echo "other";;
+esac
+
+''')
+                    
+        print outbuff
+
+    cmddict["saverun"] = saverun_cmd
+    
+    def refresh_cmd(self, cmd,targ):
+        print 'GO9_go_targets="$(go9.py gotargets export)"'
+        self.do_cmd("exportdirs")
+    cmddict["refresh"] = refresh_cmd
+    
+    # some commands want other commands as targets... for autocomplete
+    cmddict["help"]["subcmds"] = cmddict.keys()
+    cmddict["listsubcmds"]["subcmds"] = cmddict.keys()
+    
+# set up parser for command line options
+
+parser = argparse.ArgumentParser(description="Helper for go9 environment.")
+parser.add_argument("cmd", default=None, nargs = "?",
+                    help="Path(s) to recurse for targets.")
+parser.add_argument("target", default=None, nargs = "?",
+                    help="The target of the command")
+parser.add_argument("-x", "--export", default=False, action="store_true",
+                    help="triggers the 'export' mode for some commands"
+                    )
+parser.add_argument("--config", default=None, 
+                    help="Config file to load")
+
+args = parser.parse_args()
+
+
+# command, targ and default command
+cmd = args.cmd if args.cmd else "list"
+targ = args.target
+
+# check multiple files
+userhome   = os.path.expanduser("~")
+check1     = os.path.join(userhome,".config/go9.conf")
+check2     = os.path.join(userhome,".go9")
+configname = None
+config = None
+
+if args.config != None:
+    configname = args.config
+elif os.path.exists(check1):
+    configname = check1
+elif os.path.exists(check2):
+    configname = check2
+else:
+    raise Exception(
+        "NO CONFIG\n"
+        "  place a .go9 file in $HOME or go9.conf in $HOME/.config")
+
+try:
+    #  info("loading %s" % configname)
+    config = Config(configname, cmdline_args = args)
+except:
+    #Exception("Can't Load %s" % configname)
+    err("Can't Load %s" % configname)
+    raise
+
+
+go9cmd = Go9Command(config);
+        
+go9cmd.do_cmd(cmd, targ)
