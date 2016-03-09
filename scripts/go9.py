@@ -4,6 +4,14 @@ import json
 import argparse
 from go9util import partlocator
 from go9util.ksutil import dict2pretty
+
+try:
+    import blessed
+    TERM=blessed.Terminal()
+except:
+    blessed = None
+    TERM=None
+
 def err(msg):
     sys.stderr.write(msg)
     sys.stderr.write("\n")
@@ -11,6 +19,38 @@ error = err
     
 info = err
 
+# handling quoted arguments is a pain btwn bash and python...
+# by default bash swallows the quotes. In go9.sh we recover
+# these using $@, but still by the time go9.py is invoked
+# the words in the quotes are all separate arguments. However
+# some arguments begin with a quote, and some end with one
+# so we go through and recollect these into a single argument
+# and go ahead and swallow the quotes used to group the words.
+argv = []
+j = 0
+building = False
+for i in range( len(sys.argv)):
+    arg = sys.argv[i]
+    if arg[0] == '"':
+        building = True
+        argv.append(arg[1:])
+        continue
+    if arg[-1] == '"':
+        if building:
+            argv[-1] += " %s" % arg[:-1]
+        else:
+            argv.append(arg)
+        building = False
+        continue
+    if building:
+        argv[-1] += " %s" % arg
+    else:
+        argv.append(arg)
+#info("go9py14: %s" % str(sys.argv))
+sys.argv = argv
+#info("go9py14: %s" % str(sys.argv))
+
+        
 class Config(object):
     _cfg_dict = None
     filename = None
@@ -18,7 +58,9 @@ class Config(object):
     def __init__(self, cfgdict, cmdline_args = None):
         cliargs = cmdline_args
         try:
-            if isinstance(cfgdict, basestring):
+            if cfgdict == None:
+                self._cfg_dict = self._default_start_dict()
+            elif isinstance(cfgdict, basestring):
                 self.filename = cfgdict
                 cfd = open(cfgdict)
                 configdict = json.load(cfd)
@@ -27,9 +69,17 @@ class Config(object):
             else:
                 self._cfg_dict = cfgdict
         except:
-            self._cfg_dict = {"paths":[]}
+            self._cfg_dict = {self._default_start_dict()}
                 #info(dict2pretty("_cfg_dict", self._cfg_dict))
         self.cliargs = cliargs
+
+    def _default_start_dict(self):
+        return {"paths":[],
+                "spc_cmds": {   "editor": {"command": "nano {files}"},
+                                "new_editor": {"command": "nano {files}"}
+                            },
+                
+               }
         
     def get(self, key, default = None):
         retval = partlocator.get_property(self._cfg_dict, key)
@@ -46,7 +96,9 @@ class Config(object):
         return dict2pretty("config", self._cfg_dict)
 
     
-    def save(self):
+    def save(self, fn = None):
+        if fn:
+            self.filename = fn
         if self.filename:
             fd = open(self.filename, "w")
             json.dump(self._cfg_dict, fd, indent=4, sort_keys=True)
@@ -60,20 +112,29 @@ class Go9Command(object):
     cfg1 = None
     cfg2 = None
     paths = None
-    # cmddict filled near cmd functions, see below
+    # cmddict filled after each command function
+    # thus declared classwide
     cmddict = {}
+    run_dict = None
+    
+    
+    def _get_run_cmds(self):
+        rcs = config.get("run_cmds");
+        if not rcs:
+            rcs = {}
+            config.set("run_cmds", rcs)
+        return rcs
+    run_cmds = property(_get_run_cmds)
+    
     def __init__(self, config):
-        
-        bashlines = []
-        exportlines = []
-
         go9cfg = None
         pathslist = []
 
-        
         # info(config.pretty()) 
+        self.run_dict = {}
         self.config = config
         self.paths = paths = config.get("paths")
+        
         self.go9dict = dct = {}
         for pth in paths:
             pthi = 0
@@ -84,6 +145,10 @@ class Go9Command(object):
                 goname += ".%d" %pthi
                 
             dct[goname] = pth
+        # touch up the cmddict to help out some commands
+        runcmds = self.run_cmds
+        runkeys = runcmds.keys()
+        self.cmddict["run"]["subcmds"] = runkeys
 
     def do_cmd(self, cmd = None, targ = None):
         paths  = self.paths
@@ -100,6 +165,7 @@ class Go9Command(object):
             cmddef["function"](self, cmd, targ)
         else:
             error("No such command: %s" % cmd)
+            
     def add(self, cmd,targ):
         dct = self.cmddict
         paths = self.paths
@@ -163,12 +229,41 @@ go9 delete <dir_key>
         Apys = []
         Ashs = []
         Acsss = []
+        Acpp  = []
+        spccmds=self.config.get("spc_cmds");
+        #info( "go9py214: %s" % spccmds)
+        ne = None
+        if spccmds != None:
+            nedict = spccmds["new_editor"] if "new_editor" in spccmds else None
+            if isinstance(nedict,basestring):
+                # repair
+                nedict = {"command": nedict}
+                ne = nedict["command"]
+                self.config.set("spc_cmds.new_editor", nedict)
+        if isinstance(ne, dict):
+            ne = nedict["command"]
+        
+        if ne == None:
+            os.environ["EDITOR"] if "EDITOR" in os.environ else None
+        #info( "go9py217: %s" % ne)
+        if ne == None:
+            info("No 'new_editor' element. Add spc_cmds.new_editor string:")
+            info('    "new_editor": "gedit -n {files}"')
+            return ""
+        editor = ne
+        
         for root, dirs, files in os.walk("."):
             Ajss  .extend(glob(os.path.join(root, "*.js"  )))
             Ahtmls.extend(glob(os.path.join(root, "*.html")))
             Apys  .extend(glob(os.path.join(root, "*.py"  )))
             Ashs  .extend(glob(os.path.join(root, "*.sh"  )))
             Acsss .extend(glob(os.path.join(root, "*.css" )))
+            Acpp  .extend(glob(os.path.join(root, "*.c")))
+            Acpp  .extend(glob(os.path.join(root, "*.h")))
+            Acpp  .extend(glob(os.path.join(root, "*.hh")))
+            Acpp  .extend(glob(os.path.join(root, "*.c")))
+            Acpp  .extend(glob(os.path.join(root, "*.cc")))
+            Acpp  .extend(glob(os.path.join(root, "*.cpp")))
             if targ != "recurse":
                 break;
             # prune some directories
@@ -182,10 +277,11 @@ go9 delete <dir_key>
             htmls = " ".join(Ahtmls)
             pys = " ".join(Apys)
             shs = " ".join(Ashs)
-            
-            
-            print 'ne {jss} {htmls} {pys} {shs}'.format(
-                    jss=jss, htmls=htmls, pys = pys, shs = shs)
+            cpps = " ".join(Acpp)
+            files = '{jss} {htmls} {pys} {shs} {cpps}'.format(
+                        cpps=cpps, jss=jss, htmls=htmls, pys = pys, shs = shs)
+            editline = ne.format(files=files)+ " &"
+            print editline
         else:
             info ("no appropriate files found")
     cmddict["editall"] = {"function":editall,
@@ -261,6 +357,9 @@ go <dir_key>
     def list(self, cmd, targ):
         dct = self.go9dict
         keys = dct.keys()
+        if len(keys) == 0:
+            print "echo No 'go' commands yet saved, use 'go9 add <tag>' to save current directory."
+            return 
         keys.sort()
         maxkeylen = len(max(keys, key= lambda p: len(p)))+1
         keyfrag = "{key: >%d}" % maxkeylen
@@ -301,18 +400,82 @@ go <dir_key>
             
     cmddict["listsubcmds"] = { "function": listsubcmds
                             }
-        
+
     def rmturds(self, cmd, targ):
         from glob import glob
         junk = " ".join(glob("*~"))
         print 'rm {junk}'.format(junk = junk)
-    cmddict["rmturds"] = rmturds
-    
-    def rundircmd(self, cmd, targ):
-        pass
-    cmddict["rundircmd"] = rundircmd
-    
-    def saverun_cmd(self, cmd, targ):
+    cmddict["rmturds"] = {"function": rmturds,
+                            "help":"""
+Used to remove editor droppings, 'rm *~'.
+                                    """.strip()
+                           }
+    def run(self, cmd, targ):
+        runcmds = self.run_cmds
+        if targ in runcmds:
+            print ("%s" % runcmds[targ]["command"])
+        else:
+            info("No such run command: %s" % targ)
+    cmddict["run"] = {"function": run,
+                       "help": """
+go9 run <run_key>
+    Used to execute a bash command. 
+                                """.strip(), 
+                        # subcmds filled in __init__
+                       }
+    def runcmds(self, cmd, targ):
+        run_cmds = self.config.get("run_cmds", {})
+        cmdstrs = run_cmds.keys()
+        cmdstrs.sort()
+        if self.config.cliargs.export:
+            # handles the difference of sending a list to go9.sh for "export" commands
+            # and "printing" which happens to stderr.
+            print " ".join(cmdstrs)
+        else:
+            for cmdstr in cmdstrs:
+                cmdx = run_cmds[cmdstr]
+                if blessed:
+                    cmdstr = TERM.on_red(cmdstr)
+                    print "echo",cmdstr
+                info ("command name: %s" % cmdstr)
+                info ("\t%s" % cmdx["command"])
+            
+    ## put in command dictionary
+    cmddict["runcmds"] = {  "function": runcmds,
+                            "help": """
+go9 runcmds
+    Used to list the run_cmds.
+                                    """.strip()
+                          }
+                          
+    def saveruncmd(self, cmd, targ):
+        run_cmd = self.config.cliargs.run_cmd
+        if not run_cmd:
+            if self.config.cliargs.positional:
+                if len(self.config.cliargs.positional) > 0:
+                    run_cmd = self.config.cliargs.positional[0]
+                    if len(self.config.cliargs.positional) > 1:
+                        error("These args not used:\n\t%s" % self.config.cliargs.positional[1:])
+        run_cmds = self.config.get("run_cmds", {})
+        cmdstrs = run_cmds.keys()
+        if targ in cmdstrs:
+            error("run cmd '%s' already exists" % targ)
+            error("\t%s" % run_cmds[targ]["command"])
+        elif not run_cmd:
+            error("no command given")
+        else:
+            run_cmds[targ]={"command":run_cmd}
+            self.config.set("run_cmds", run_cmds)
+            self.config.save()
+
+    ## save as command
+    cmddict["saveruncmd"] = {"function": saveruncmd,
+                            "help":"""
+go9 saveruncmd <run_name> "<cmd>"
+                                    """.strip()
+                            }
+
+    def savelast(self, cmd, targ):
         import subprocess
         outbuff = ''
         dct = self.go9dict
@@ -326,29 +489,52 @@ go <dir_key>
 '''read -p "Use '$_GO9_lastcmd' (y/n)?" choice
 case "$choice" in
    y|Y ) 
-        go9 set_dir_cmd "$_GO9_lastcmd";;
+        echo choosing " $_GO9_lastcmd";;
    n|N )
         echo "Ok nvm.";;
    "" ) echo "what?";;
    * ) 
         echo "other";;
 esac
-
-''')
+'''.format() )
                     
         print outbuff
 
-    cmddict["saverun"] = saverun_cmd
+    ## put in command dictionary
+    cmddict["savelast"] = savelast
     
     def refresh_cmd(self, cmd,targ):
         print 'GO9_go_targets="$(go9.py gotargets export)"'
         self.do_cmd("exportdirs")
+
+    ## put in command dictionary
     cmddict["refresh"] = refresh_cmd
     
     # some commands want other commands as targets... for autocomplete
     cmddict["help"]["subcmds"] = cmddict.keys()
     cmddict["listsubcmds"]["subcmds"] = cmddict.keys()
     
+    def spccmds(self, cmd, targ):
+        spc_cmds = self.config.get("spc_cmds", {})
+        cmdstrs = spc_cmds.keys()
+        cmdstrs.sort()
+        if self.config.cliargs.export:
+            # handles the difference of sending a list to go9.sh for "export" commands
+            # and "printing" which happens to stderr.
+            print " ".join(cmdstrs)
+        else:
+            for cmdstr in cmdstrs:
+                cmdx = spc_cmds[cmdstr]
+                info ("command name: %s" % cmdstr)
+                info ("\t%s" % cmdx["command"])
+            
+    ## put in command dictionary
+    cmddict["spccmds"] = {  "function": spccmds,
+                            "help": """
+go9 spccmds
+    Used to list the spc_cmds (special commands such as 'editor').
+                                    """.strip()
+                          }
 # set up parser for command line options
 
 parser = argparse.ArgumentParser(description="Helper for go9 environment.")
@@ -356,6 +542,8 @@ parser.add_argument("cmd", default=None, nargs = "?",
                     help="Path(s) to recurse for targets.")
 parser.add_argument("target", default=None, nargs = "?",
                     help="The target of the command")
+parser.add_argument("positional", nargs = "*", help="Extra positional args")
+parser.add_argument("--run_cmd", type=str, default=None, help="For a bash command.")
 parser.add_argument("-x", "--export", default=False, action="store_true",
                     help="triggers the 'export' mode for some commands"
                     )
@@ -383,13 +571,14 @@ elif os.path.exists(check1):
 elif os.path.exists(check2):
     configname = check2
 else:
-    raise Exception(
-        "NO CONFIG\n"
-        "  place a .go9 file in $HOME or go9.conf in $HOME/.config")
+    info("Warning: NO CONFIG, creating one at ~/.config/go9.conf")
+    configname = None
 
 try:
     #  info("loading %s" % configname)
     config = Config(configname, cmdline_args = args)
+    if configname == None:
+        config.save("{home}/.config/go9.conf".format(home = os.environ["HOME"]) )
 except:
     #Exception("Can't Load %s" % configname)
     err("Can't Load %s" % configname)
