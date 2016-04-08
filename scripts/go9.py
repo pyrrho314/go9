@@ -222,6 +222,10 @@ go9 delete <dir_key>
                       }
     
     def editall(self, cmd, targ):
+        """Edit all supported filetypes (currently hardcoded in this function).
+            subcmds:
+                [recurse] - then recurse subdirectories
+        """
         dct = self.cmddict
         from glob import glob
         Ajss = []
@@ -231,7 +235,7 @@ go9 delete <dir_key>
         Acsss = []
         Acpp  = []
         spccmds=self.config.get("spc_cmds");
-        #info( "go9py214: %s" % spccmds)
+        info( "go9py214: %s" % spccmds)
         ne = None
         if spccmds != None:
             nedict = spccmds["new_editor"] if "new_editor" in spccmds else None
@@ -240,8 +244,8 @@ go9 delete <dir_key>
                 nedict = {"command": nedict}
                 ne = nedict["command"]
                 self.config.set("spc_cmds.new_editor", nedict)
-        if isinstance(ne, dict):
-            ne = nedict["command"]
+            elif isinstance(nedict, dict):
+                ne = nedict["command"]
         
         if ne == None:
             os.environ["EDITOR"] if "EDITOR" in os.environ else None
