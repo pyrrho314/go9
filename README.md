@@ -10,8 +10,16 @@ Tool for bash that helps move around development space. Requires only python.
 
 ### Instructions
 
-Clone the repository into $HOME/go9. Then add the following to
-.bashrc
+Clone the repository into $HOME/go9, e.g.:
+```
+cd $HOME
+mkdir go9
+cd go9
+git clone https://github.com/pyrrho314/go9.git
+```
+
+Then add the following to
+.bashrc:
 
 ```
 # go9
@@ -21,7 +29,9 @@ Clone the repository into $HOME/go9. Then add the following to
 . go9.sh
 ```
 
-## Use
+NOTE: If you put go9 elsewhere, make the nec. alterations to the above `.bashrc` lines. The programs `addpath` and `addpypath` will idempotently add paths to PATH and PYTHONPATH respectively.
+
+## To Use
 
 Sourcing go9.sh adds two bash function to the environment, 'go' and 'go9'.  Use 'go9 add \<this_dir_alias\>' when in the target directory, then 'go \<target_dir_alias\>' to cd to that directory.  If you type 'go' with no argument, a list of available directories is displayed.
 
