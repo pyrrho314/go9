@@ -1,6 +1,6 @@
-from astrodata.adutils import termcolor as tc
+import termcolor as tc
 from pprint import pprint,pformat
-from astrodata.Errors import Error
+Error = Exception
 
 
 class KSUtilError(Error):

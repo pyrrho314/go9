@@ -1,7 +1,7 @@
 #!/bin/bash
 declare -A GO9_tt #target table
 
-. nenv $* # SETS some useful environment variables
+#! . nenv $* # SETS some useful environment variables
 
 GO9_padding="                                                                    "
 
