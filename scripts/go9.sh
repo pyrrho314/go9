@@ -76,6 +76,7 @@ _comp_go()
 {
 local cur prev
     #COMP_WORDS
+
     cur=${COMP_WORDS[COMP_CWORD]}
     prev=${COMP_WORDS[COMP_CWORD-1]}
 
