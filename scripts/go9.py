@@ -172,12 +172,31 @@ class Go9Command(object):
         curpath = os.getcwd()
         if targ:
             numvers = 0
-            for pth in paths:
+            for pi in range(len(paths)):
+                pth= paths[pi];
                 if pth["go_name"] == targ:
                     numvers += 1
+                    hittarg = pth
+                    hittargindex = pi
+            if numvers>1:
+                err("config error, multiple targets for 'go_name' {goname}".format(goname=targ))
             if numvers>0:
-                info("Already have key '%s'"%targ)
-                info("--> %s" % curpath)
+                info("Already have key '%s' --> %s" % (targ,hittarg['path']))
+                if (curpath == hittarg['path']):
+                    info("path already set");
+                    return
+                if not self.config.cliargs.force:
+                    err('Use -f flag to force override.')
+                    return
+                elemdct = {
+                            "go_name":targ,
+                            "path": curpath,
+                            "type": "file_system",
+                            "_history": hittarg,
+                          }
+                paths[hittargindex] = elemdct
+                config.save()
+                print 'GO9_go_targets="$(go9.py gotargets export)"'
             else:
                 elemdct =   { 
                             "go_name": targ,
@@ -510,6 +529,11 @@ esac
     def refresh_cmd(self, cmd,targ):
         print 'GO9_go_targets="$(go9.py gotargets export)"'
         self.do_cmd("exportdirs")
+        # reload go9.sh which is in my own directory
+        go9ScriptFilename = os.path.join(os.path.dirname(__file__), 'go9.sh')
+        go9ScriptFile = open(go9ScriptFilename)
+        go9Script = go9ScriptFile.read()
+        print go9Script
 
     ## put in command dictionary
     cmddict["refresh"] = refresh_cmd
@@ -541,7 +565,22 @@ go9 spccmds
                           }
 # set up parser for command line options
 
-parser = argparse.ArgumentParser(description="Helper for go9 environment.")
+class ArgumentParserError(Exception): pass
+
+class ThrowingArgumentParser(argparse.ArgumentParser):
+    def error(self, message):
+        raise ArgumentParserError(message)
+
+class HelpAction(argparse.Action):
+    def __init__(self, option_strings, dest, nargs=None, **kwargs):
+        if nargs is not None:
+            raise ValueError("nargs not allowed")
+        super(HelpAction, self).__init__(option_strings, dest, **kwargs)
+    def __call__(self, parser, namespace, values, option_string=None):
+        print 'echo %r %r %r' % (namespace, values, option_string)
+        
+parser = ThrowingArgumentParser(description="Helper for go9 environment.",
+            add_help=False)
 parser.add_argument("cmd", default=None, nargs = "?",
                     help="Path(s) to recurse for targets.")
 parser.add_argument("target", default=None, nargs = "?",
@@ -553,9 +592,15 @@ parser.add_argument("-x", "--export", default=False, action="store_true",
                     )
 parser.add_argument("--config", default=None, 
                     help="Config file to load")
+parser.add_argument('-f', "--force", default=False, action="store_true")
+parser.add_argument('-h', '--help', action= HelpAction)
 
-args = parser.parse_args()
 
+try:
+    args = parser.parse_args()
+except:
+    print "echo Unknown argumentation. Use \\'go9 help\\' for more information."
+    sys.exit()
 
 # command, targ and default command
 cmd = args.cmd if args.cmd else "list"

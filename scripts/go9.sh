@@ -3,7 +3,7 @@ declare -A GO9_tt #target table
 
 #! . nenv $* # SETS some useful environment variables
 
-GO9_padding="                                                                    "
+GO9_padding=" "*80
 
 #GO9_tt[]=""
 go9() {
@@ -24,6 +24,7 @@ go9() {
     eval "$answer"
 }
 export -f go9
+
 run()
 {
     answer="$(go9.py run $*)"
@@ -33,6 +34,8 @@ export -f run
 
 go()
 {
+    GO9_subcmds=$(go9.py listcmds export)
+    GO9_go_targets=$(go9.py gotargets export)
     answer="$(go9.py go $*)"
     eval "$answer"
 }
