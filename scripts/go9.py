@@ -3,7 +3,7 @@ import os,sys
 import json
 import argparse
 from go9util import partlocator
-from go9util.ksutil import dict2pretty
+from go9util.ksutil import dict2pretty, publicKeys
 
 try:
     import blessed
@@ -50,7 +50,7 @@ for i in range( len(sys.argv)):
 sys.argv = argv
 #info("go9py14: %s" % str(sys.argv))
 
-        
+
 class Config(object):
     _cfg_dict = None
     filename = None
@@ -211,7 +211,7 @@ class Go9Command(object):
             err("No target name!")
     cmddict["add"] = {"function": add,
                         "help": """
-go9 add <dir_key>
+go9 add <dir_key> -f
     Used to add current directory
                         """.strip()
                       }
@@ -446,6 +446,7 @@ go9 run <run_key>
                                 """.strip(), 
                         # subcmds filled in __init__
                        }
+                       
     def runcmds(self, cmd, targ):
         run_cmds = self.config.get("run_cmds", {})
         cmdstrs = run_cmds.keys()
@@ -463,7 +464,7 @@ go9 run <run_key>
                 info ("command name: %s" % cmdstr)
                 info ("\t%s" % cmdx["command"])
             
-    ## put in command dictionary
+    # put in command dictionary
     cmddict["runcmds"] = {  "function": runcmds,
                             "help": """
 go9 runcmds
@@ -563,6 +564,54 @@ go9 spccmds
     Used to list the spc_cmds (special commands such as 'editor').
                                     """.strip()
                           }
+                          
+    def whereami(self, cmd, targ):
+        cwd = os.path.abspath(os.path.curdir)
+        path2go = {}
+        dct = self.go9dict
+        keys = dct.keys()
+        keys.sort()
+        maxkeylen = len(max(keys, key= lambda p: len(p)))+1
+        keyfrag = "{key: >%d}" % maxkeylen
+        for key in keys:
+            path = dct[key]["path"]
+            pathparts = path.split("/")
+            pathdot = ".".join(pathparts)
+            partlocator.set_property(path2go, pathdot+"._target", key)
+            partlocator.set_property(path2go, pathdot+"._fullpath", path)
+            #showline = True
+            #showline = path == cwd 
+            #if showline:
+            #    formstr = 'echo "%s ==> {path}";\n' % keyfrag
+            #    print formstr.format(
+            #                    key=key, path=dct[key]["path"])
+        cwdary = cwd.split("/");
+        cwdkey = ".".join(cwdary);
+        parentary = cwdary[0:-1];
+        parentkey = ".".join(parentary);
+        currentTarget = partlocator.get_property(path2go, cwdkey+"._target")
+        parentDict = partlocator.get_property(path2go, parentkey );
+        # children and siblings (no recursion)
+        currentDict = partlocator.get_property(path2go, cwdkey)
+        childkeys = publicKeys(currentDict) 
+        siblingkeys = publicKeys(parentDict)
+        print "echo current directory is called \\'{targ}\\'".format(targ=currentTarget)
+        print "echo children: {children}".format(
+                                        children=
+                                            ", ".join(childkeys) 
+                                            if len(childkeys) > 0 
+                                            else "none")
+        print "echo siblings: {siblings}".format(
+                                        siblings=
+                                            ", ".join(siblingkeys) 
+                                            if len(siblingkeys) > 0 
+                                            else "none")
+        
+        # info(dict2pretty("currentDict", currentDict))
+        # info(dict2pretty("parentDict", publicKeys(parentDict)))
+        
+    cmddict["whereami"] = whereami
+
 # set up parser for command line options
 
 class ArgumentParserError(Exception): pass

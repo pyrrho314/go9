@@ -1,4 +1,5 @@
 import termcolor as tc
+import partlocator
 from pprint import pprint,pformat
 Error = Exception
 
@@ -246,3 +247,26 @@ def rand_file_id(length=12):
     fname = ''.join(sample(chars, length))
 
     return fname 
+
+def keysWithoutUnderscore(nDict):
+    keys = filter(lambda item: not isinstance(item, basestring) and not item.startsWith("_"), nDict.keys())
+    return keys;
+
+def dirReport (path2goDict, cwdkey):
+    cwdkeyParts = cwdkey.split(".")
+    parentkeyParts = cwdkey[:-1]
+    parentkey = ".".join(parentKeyParts)
+    parentDict = partlocator.get_property(path2goDict, parentkey)
+    cwdDict = partlocator.get_property(path2goDict, cwdkey)
+    return {
+        "siblings": keysWithoutUnderscore(parentDict),
+        "children": keysWithoutUnderscore(cwdDict)
+    }
+    
+    
+def publicKeys( obarg):
+    ''' Just return object keys not starting with _
+    '''
+    cleanary = filter( lambda x: x[0] != "_", obarg.keys() )
+    
+    return cleanary
