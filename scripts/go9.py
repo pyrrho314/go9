@@ -595,7 +595,11 @@ go9 spccmds
         currentDict = partlocator.get_property(path2go, cwdkey)
         childkeys = publicKeys(currentDict) 
         siblingkeys = publicKeys(parentDict)
-        print "echo current directory is called \\'{targ}\\'".format(targ=currentTarget)
+        if currentTarget:
+            print "echo current directory \({cd}\) is called \\'{targ}\\'".format(targ=currentTarget, 
+                                                                            cd=cwdary[-1])
+        else:
+            print "echo current directory \({cd}\) is not a go target".format(cd=cwdary[-1])
         print "echo children: {children}".format(
                                         children=
                                             ", ".join(childkeys) 
