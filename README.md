@@ -39,7 +39,6 @@ Sourcing go9.sh adds two bash function to the environment, 'go' and 'go9'.  Use 
 
 ## Windows Support
 
-Windows support is not complete, though `go9 add xyz` add and `go xyz` have been made to work, there are other oddities, 
-commands probably do not work, environment export doesn't work, due to some assumptions about unix filenames.
+Windows support is not complete, though `go9 add xyz` add and `go xyz` have been made to work. Save run commands and run work. But mostly it's untested still, and there are at least some other oddities, i.e. environment export doesn't work, due to some assumptions about unix filenames. This will effect other planned enhancements.
 
 
