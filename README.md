@@ -37,4 +37,9 @@ NOTE: addpath and addpypath are idempotent so they won't keep adding themselves 
 
 Sourcing go9.sh adds two bash function to the environment, 'go' and 'go9'.  Use `go9 add \<this_dir_alias\>` when in the target directory, then `go \<target_dir_alias\>` to cd to that directory.  If you type 'go' with no argument, a list of available directories is displayed. Type `go9 help` for help.
 
+## Windows Support
+
+Windows support is not complete, though `go9 add xyz` add and `go xyz` have been made to work, there are other oddities, 
+commands probably do not work, environment export doesn't work, due to some assumptions about unix filenames.
+
 
