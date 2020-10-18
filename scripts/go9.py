@@ -355,7 +355,7 @@ go9 help <go9_cmd>
         if targ == None:
             self.do_cmd("list")
         elif targ in dct:
-            print "cd %s" % dct[targ]["path"]
+            print 'cd "%s"' % dct[targ]["path"]
         else:
             print 'echo \"No go_name == {targ}\"'.format(targ=targ)
     cmddict["go"] = {"function": go,
