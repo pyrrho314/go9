@@ -16,7 +16,7 @@ def err(msg):
     sys.stderr.write(msg)
     sys.stderr.write("\n")
 error = err
-    
+
 info = err
 
 # handling quoted arguments is a pain btwn bash and python...
@@ -78,16 +78,16 @@ class Config(object):
                 "spc_cmds": {   "editor": {"command": "nano {files}"},
                                 "new_editor": {"command": "nano {files}"}
                             },
-                
+
                }
-        
+
     def get(self, key, default = None):
         retval = partlocator.get_property(self._cfg_dict, key)
         if retval == None:
             return default
         else:
             return retval
-  
+
     def set(self, key, val):
         partlocator.set_property(self._cfg_dict, key, val)
         return self
@@ -95,7 +95,7 @@ class Config(object):
     def pretty(self):
         return dict2pretty("config", self._cfg_dict)
 
-    
+
     def save(self, fn = None):
         if fn:
             self.filename = fn
@@ -116,8 +116,8 @@ class Go9Command(object):
     # thus declared classwide
     cmddict = {}
     run_dict = None
-    
-    
+
+
     def _get_run_cmds(self):
         rcs = config.get("run_cmds");
         if not rcs:
@@ -125,16 +125,16 @@ class Go9Command(object):
             config.set("run_cmds", rcs)
         return rcs
     run_cmds = property(_get_run_cmds)
-    
+
     def __init__(self, config):
         go9cfg = None
         pathslist = []
 
-        # info(config.pretty()) 
+        # info(config.pretty())
         self.run_dict = {}
         self.config = config
         self.paths = paths = config.get("paths")
-        
+
         self.go9dict = dct = {}
         for pth in paths:
             pthi = 0
@@ -143,7 +143,7 @@ class Go9Command(object):
                 pthi += 1
             if pthi >0:
                 goname += ".%d" %pthi
-                
+
             dct[goname] = pth
         # touch up the cmddict to help out some commands
         runcmds = self.run_cmds
@@ -154,18 +154,18 @@ class Go9Command(object):
         paths  = self.paths
         dct    = self.go9dict
         config = self.config
-        
+
         cmdlist = self.cmddict.keys()
-        
+
         if cmd in cmdlist:
             cmddef = self.cmddict[cmd]
             if not isinstance(cmddef, dict):
                 cmddef = {"function": cmddef}
-            
+
             cmddef["function"](self, cmd, targ)
         else:
             error("No such command: %s" % cmd)
-            
+
     def add(self, cmd,targ):
         dct = self.cmddict
         paths = self.paths
@@ -198,7 +198,7 @@ class Go9Command(object):
                 config.save()
                 print 'GO9_go_targets="$(go9.py gotargets export)"'
             else:
-                elemdct =   { 
+                elemdct =   {
                             "go_name": targ,
                             "path": curpath,
                             "type": "file_system"
@@ -239,7 +239,7 @@ go9 delete <dir_key>
     Used to delete a directory from the go table.
                         """.strip()
                       }
-    
+
     def editall(self, cmd, targ):
         """Edit all supported filetypes (currently hardcoded in this function).
             subcmds:
@@ -265,7 +265,7 @@ go9 delete <dir_key>
                 self.config.set("spc_cmds.new_editor", nedict)
             elif isinstance(nedict, dict):
                 ne = nedict["command"]
-        
+
         if ne == None:
             os.environ["EDITOR"] if "EDITOR" in os.environ else None
         #info( "go9py217: %s" % ne)
@@ -274,7 +274,7 @@ go9 delete <dir_key>
             info('    "new_editor": "gedit -n {files}"')
             return ""
         editor = ne
-        
+
         for root, dirs, files in os.walk("."):
             Ajss  .extend(glob(os.path.join(root, "*.js"  )))
             Ahtmls.extend(glob(os.path.join(root, "*.html")))
@@ -294,7 +294,7 @@ go9 delete <dir_key>
                 dirs.remove("node_modules")
             while "bower_components" in dirs:
                 dirs.remove("bower_components")
-        
+
         if len(Ajss) or len(Ahtmls) or len(Apys) or len(Ashs):
             jss = " ".join(Ajss)
             htmls = " ".join(Ahtmls)
@@ -311,12 +311,12 @@ go9 delete <dir_key>
                             "subcmds": ["recurse"],
                             "help": """
 go9 editall [recurse]
-    Used to edit all appropriate file types. If recurse present, go 
+    Used to edit all appropriate file types. If recurse present, go
     through sub-directories.  Currently the file types and editor
     is hardcoded. TODO: set edit command and extensions in .go9 config.
                                  """.strip()
                             }
-     
+
     def exportdirs(self, cmd, targ):
         dct = self.go9dict
         targs = dct.keys()
@@ -326,7 +326,7 @@ go9 editall [recurse]
     cmddict["exportdirs"] = {"function": exportdirs,
                              "help":"""
 go9 exportdirs
-    Used to create bash environment variables for each go9 
+    Used to create bash environment variables for each go9
     directory. The vars are of the form GO9DIR_<dir_key>.
                                     """.strip()
                             }
@@ -349,7 +349,7 @@ go9 help <go9_cmd>
 
                         """.strip()
                        }
-    
+
     def go(self, cmd, targ):
         dct = self.go9dict
         if targ == None:
@@ -376,13 +376,13 @@ go <dir_key>
             for targstr in targs:
                 print "echo \"%s\";\n" % targstr
     cmddict["gotargets"] = gotargets
-    
+
     def list(self, cmd, targ):
         dct = self.go9dict
         keys = dct.keys()
         if len(keys) == 0:
             print "echo No 'go' commands yet saved, use 'go9 add <tag>' to save current directory."
-            return 
+            return
         keys.sort()
         maxkeylen = len(max(keys, key= lambda p: len(p)))+1
         keyfrag = "{key: >%d}" % maxkeylen
@@ -406,21 +406,21 @@ go <dir_key>
             for cmdstr in cmds:
                 print "echo \"%s\";\n" % cmdstr
     cmddict["listcmds"] = listcmds
-    
+
     def listsubcmds(self, cmd, targ):
         if targ in self.cmddict:
             subcmds = None
             cmdict = self.cmddict[targ]
             if isinstance(cmdict, dict):
                 subcmds = cmdict["subcmds"] if "subcmds" in cmdict else None
-            
+
             if self.config.cliargs.export:
                 if subcmds and len(subcmds) > 0:
                     print " ".join(subcmds)
             else:
                 if subcmds and len(subcmds) > 0:
                     print 'echo "%s"' % " ".join(subcmds)
-            
+
     cmddict["listsubcmds"] = { "function": listsubcmds
                             }
 
@@ -442,11 +442,11 @@ Used to remove editor droppings, 'rm *~'.
     cmddict["run"] = {"function": run,
                        "help": """
 go9 run <run_key>
-    Used to execute a bash command. 
-                                """.strip(), 
+    Used to execute a bash command.
+                                """.strip(),
                         # subcmds filled in __init__
                        }
-                       
+
     def runcmds(self, cmd, targ):
         run_cmds = self.config.get("run_cmds", {})
         cmdstrs = run_cmds.keys()
@@ -463,7 +463,7 @@ go9 run <run_key>
                     print "echo",cmdstr
                 info ("command name: %s" % cmdstr)
                 info ("\t%s" % cmdx["command"])
-            
+
     # put in command dictionary
     cmddict["runcmds"] = {  "function": runcmds,
                             "help": """
@@ -471,7 +471,7 @@ go9 runcmds
     Used to list the run_cmds.
                                     """.strip()
                           }
-                          
+
     def saveruncmd(self, cmd, targ):
         run_cmd = self.config.cliargs.run_cmd
         if not run_cmd:
@@ -505,28 +505,28 @@ go9 saveruncmd <run_name> "<cmd>"
         dct = self.go9dict
         # get's previous command and trims it.
         # How lastcmd works:
-        #   get history of 2 steps, cut off the history #, 
-        
+        #   get history of 2 steps, cut off the history #,
+
         lastcmd  = 'history 2 | cut -d " " -f 3- | head -n 1 | sed -e "s/^[[:space:]]*//g" -e "s/[[:space:]]*\$//g"'
         outbuff = '_GO9_lastcmd="$({lastcmd})"\n'.format(lastcmd=lastcmd)
         outbuff += (
 '''read -p "Use '$_GO9_lastcmd' (y/n)?" choice
 case "$choice" in
-   y|Y ) 
+   y|Y )
         echo choosing " $_GO9_lastcmd";;
    n|N )
         echo "Ok nvm.";;
    "" ) echo "what?";;
-   * ) 
+   * )
         echo "other";;
 esac
 '''.format() )
-                    
+
         print outbuff
 
     ## put in command dictionary
     cmddict["savelast"] = savelast
-    
+
     def refresh_cmd(self, cmd,targ):
         print 'GO9_go_targets="$(go9.py gotargets export)"'
         self.do_cmd("exportdirs")
@@ -538,11 +538,11 @@ esac
 
     ## put in command dictionary
     cmddict["refresh"] = refresh_cmd
-    
+
     # some commands want other commands as targets... for autocomplete
     cmddict["help"]["subcmds"] = cmddict.keys()
     cmddict["listsubcmds"]["subcmds"] = cmddict.keys()
-    
+
     def spccmds(self, cmd, targ):
         spc_cmds = self.config.get("spc_cmds", {})
         cmdstrs = spc_cmds.keys()
@@ -556,7 +556,7 @@ esac
                 cmdx = spc_cmds[cmdstr]
                 info ("command name: %s" % cmdstr)
                 info ("\t%s" % cmdx["command"])
-            
+
     ## put in command dictionary
     cmddict["spccmds"] = {  "function": spccmds,
                             "help": """
@@ -564,7 +564,7 @@ go9 spccmds
     Used to list the spc_cmds (special commands such as 'editor').
                                     """.strip()
                           }
-                          
+
     def whereami(self, cmd, targ):
         cwd = os.path.abspath(os.path.curdir)
         path2go = {}
@@ -580,7 +580,7 @@ go9 spccmds
             partlocator.set_property(path2go, pathdot+"._target", key)
             partlocator.set_property(path2go, pathdot+"._fullpath", path)
             #showline = True
-            #showline = path == cwd 
+            #showline = path == cwd
             #if showline:
             #    formstr = 'echo "%s ==> {path}";\n' % keyfrag
             #    print formstr.format(
@@ -591,29 +591,46 @@ go9 spccmds
         parentkey = ".".join(parentary);
         currentTarget = partlocator.get_property(path2go, cwdkey+"._target")
         parentDict = partlocator.get_property(path2go, parentkey );
+        parentTarget = partlocator.get_property(path2go, parentkey+"._target" )
         # children and siblings (no recursion)
         currentDict = partlocator.get_property(path2go, cwdkey)
-        childkeys = publicKeys(currentDict) 
+        childkeys = publicKeys(currentDict)
         siblingkeys = publicKeys(parentDict)
+
+        def getChildKeyAndTarg(key):
+            target = partlocator.get_property(path2go, cwdkey+"."+key+"._target")
+            return "\({key}\) \\'{target}\\'".format(key=key, target=target)
+        def getSiblingKeyAndTarg(key):
+            target = partlocator.get_property(path2go, parentkey+"."+key+"._target")
+            return "\({key}\) \\'{target}\\'".format(key=key, target=target)
+
+
+        childKeysAndTargs = map(getChildKeyAndTarg, childkeys)
+        siblingKeysAndTargs = map(getSiblingKeyAndTarg, siblingkeys)
         if currentTarget:
-            print "echo current directory \({cd}\) is called \\'{targ}\\'".format(targ=currentTarget, 
+            print "echo current directory \({cd}\) is called \\'{targ}\\'".format(targ=currentTarget,
                                                                             cd=cwdary[-1])
         else:
             print "echo current directory \({cd}\) is not a go target".format(cd=cwdary[-1])
+        parentname = (parentDict["_target"]
+                        if ("_target" in parentDict)
+                        else "\<not named\>")
+        print "echo '  parent': \({parentname}\) \\'{parenttarget}\\'".format(
+            parentname=parentname, parenttarget=parentTarget)
         print "echo children: {children}".format(
                                         children=
-                                            ", ".join(childkeys) 
-                                            if len(childkeys) > 0 
-                                            else "none")
+                                            ", ".join(childKeysAndTargs)
+                                            if childkeys and len(childkeys) > 0
+                                            else "\<not named\>")
         print "echo siblings: {siblings}".format(
                                         siblings=
-                                            ", ".join(siblingkeys) 
-                                            if len(siblingkeys) > 0 
-                                            else "none")
-        
+                                            ", ".join(siblingKeysAndTargs)
+                                            if siblingkeys and len(siblingkeys) > 0
+                                            else "\<not named\>")
+
         # info(dict2pretty("currentDict", currentDict))
         # info(dict2pretty("parentDict", publicKeys(parentDict)))
-        
+
     cmddict["whereami"] = whereami
 
 # set up parser for command line options
@@ -631,7 +648,7 @@ class HelpAction(argparse.Action):
         super(HelpAction, self).__init__(option_strings, dest, **kwargs)
     def __call__(self, parser, namespace, values, option_string=None):
         print 'echo %r %r %r' % (namespace, values, option_string)
-        
+
 parser = ThrowingArgumentParser(description="Helper for go9 environment.",
             add_help=False)
 parser.add_argument("cmd", default=None, nargs = "?",
@@ -643,7 +660,7 @@ parser.add_argument("--run_cmd", type=str, default=None, help="For a bash comman
 parser.add_argument("-x", "--export", default=False, action="store_true",
                     help="triggers the 'export' mode for some commands"
                     )
-parser.add_argument("--config", default=None, 
+parser.add_argument("--config", default=None,
                     help="Config file to load")
 parser.add_argument('-f', "--force", default=False, action="store_true")
 parser.add_argument('-h', '--help', action= HelpAction)
@@ -688,5 +705,5 @@ except:
 
 
 go9cmd = Go9Command(config);
-        
+
 go9cmd.do_cmd(cmd, targ)

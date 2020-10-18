@@ -267,6 +267,9 @@ def dirReport (path2goDict, cwdkey):
 def publicKeys( obarg):
     ''' Just return object keys not starting with _
     '''
-    cleanary = filter( lambda x: x and len(x) and x[0] != "_", obarg.keys() )
+    if (obarg):
+        cleanary = filter( lambda x: x and len(x) and x[0] != "_", obarg.keys() )
+    else:
+        cleanary = None
     
     return cleanary
