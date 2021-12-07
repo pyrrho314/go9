@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 import os,sys
 import json
 import argparse
@@ -196,7 +196,7 @@ class Go9Command(object):
                           }
                 paths[hittargindex] = elemdct
                 config.save()
-                print 'GO9_go_targets="$(go9.py gotargets export)"'
+                print('GO9_go_targets="$(go9.py gotargets export)"')
             else:
                 elemdct =   {
                             "go_name": targ,
@@ -206,7 +206,7 @@ class Go9Command(object):
                 paths.append(elemdct)
             # info(dict2pretty("gpy111: paths", paths))
                 config.save()
-                print 'GO9_go_targets="$(go9.py gotargets export)"'
+                print('GO9_go_targets="$(go9.py gotargets export)"')
         else:
             err("No target name!")
     cmddict["add"] = {"function": add,
@@ -232,7 +232,7 @@ go9 add <dir_key> -f
             rml = config.get("removed_paths", [])
             rml.extend(rmlist)
             config.save()
-        print 'GO9_go_targets="$(go9.py gotargets export)"'
+        print('GO9_go_targets="$(go9.py gotargets export)"')
     cmddict["delete"] = {"function": delete,
                         "help": """
 go9 delete <dir_key>
@@ -304,7 +304,7 @@ go9 delete <dir_key>
             files = '{jss} {htmls} {pys} {shs} {cpps}'.format(
                         cpps=cpps, jss=jss, htmls=htmls, pys = pys, shs = shs)
             editline = ne.format(files=files)+ " &"
-            print editline
+            print(editline)
         else:
             info ("no appropriate files found")
     cmddict["editall"] = {"function":editall,
@@ -322,7 +322,7 @@ go9 editall [recurse]
         targs = dct.keys()
         for targx in targs:
             targx = targx.replace(".","_")
-            print "export GO9DIR_{targ}={path};".format(targ=targx, path=dct[targx]["path"])
+            print("export GO9DIR_{targ}={path};".format(targ=targx, path=dct[targx]["path"]))
     cmddict["exportdirs"] = {"function": exportdirs,
                              "help":"""
 go9 exportdirs
@@ -355,9 +355,9 @@ go9 help <go9_cmd>
         if targ == None:
             self.do_cmd("list")
         elif targ in dct:
-            print 'cd "%s"' % dct[targ]["path"]
+            print(f'cd "{dct[targ]["path"]}"')
         else:
-            print 'echo \"No go_name == {targ}\"'.format(targ=targ)
+            print(f'echo \"No go_name == {targ}\"')
     cmddict["go"] = {"function": go,
                     "help": """
 go9 go <dir_key>
@@ -371,17 +371,17 @@ go <dir_key>
         targs = dct.keys()
         targs.sort()
         if targ == "export":
-            print " ".join(targs)
+            print(" ".join(targs))
         else:
             for targstr in targs:
-                print "echo \"%s\";\n" % targstr
+                print(f"echo \"{targstr}\";\n")
     cmddict["gotargets"] = gotargets
 
     def list(self, cmd, targ):
         dct = self.go9dict
         keys = dct.keys()
         if len(keys) == 0:
-            print "echo No 'go' commands yet saved, use 'go9 add <tag>' to save current directory."
+            print("echo No 'go' commands yet saved, use 'go9 add <tag>' to save current directory.")
             return
         keys.sort()
         maxkeylen = len(max(keys, key= lambda p: len(p)))+1
@@ -391,9 +391,9 @@ go <dir_key>
             if targ:
                 showline = targ in key
             if showline:
-                formstr = 'echo "%s ==> {path}";\n' % keyfrag
-                print formstr.format(
-                                key=key, path=dct[key]["path"])
+                formstr = f'echo "{keyfrag} ==> {path}";\n'
+                print(formstr.format(
+                                key=key, path=dct[key]["path"]))
     cmddict["list"] = list
 
     def listcmds(self, cmd, targ):
@@ -401,10 +401,10 @@ go <dir_key>
         cmds = []
         cmds.extend(autocmds)
         if targ == "export":
-            print " ".join(cmds)
+            print(" ".join(cmds))
         else:
             for cmdstr in cmds:
-                print "echo \"%s\";\n" % cmdstr
+                print("echo \"%s\";\n" % cmdstr)
     cmddict["listcmds"] = listcmds
 
     def listsubcmds(self, cmd, targ):
@@ -416,10 +416,10 @@ go <dir_key>
 
             if self.config.cliargs.export:
                 if subcmds and len(subcmds) > 0:
-                    print " ".join(subcmds)
+                    print(" ".join(subcmds))
             else:
                 if subcmds and len(subcmds) > 0:
-                    print 'echo "%s"' % " ".join(subcmds)
+                    print('echo "{scmds}"'.format(scmds = " ".join(subcmds))
 
     cmddict["listsubcmds"] = { "function": listsubcmds
                             }
@@ -427,7 +427,7 @@ go <dir_key>
     def rmturds(self, cmd, targ):
         from glob import glob
         junk = " ".join(glob("*~"))
-        print 'rm {junk}'.format(junk = junk)
+        print(f'rm {junk}')
     cmddict["rmturds"] = {"function": rmturds,
                             "help":"""
 Used to remove editor droppings, 'rm *~'.
@@ -436,7 +436,7 @@ Used to remove editor droppings, 'rm *~'.
     def run(self, cmd, targ):
         runcmds = self.run_cmds
         if targ in runcmds:
-            print ("%s" % runcmds[targ]["command"])
+            print("%s" % runcmds[targ]["command"])
         else:
             info("No such run command: %s" % targ)
     cmddict["run"] = {"function": run,
@@ -454,13 +454,13 @@ go9 run <run_key>
         if self.config.cliargs.export:
             # handles the difference of sending a list to go9.sh for "export" commands
             # and "printing" which happens to stderr.
-            print " ".join(cmdstrs)
+            print(" ".join(cmdstrs))
         else:
             for cmdstr in cmdstrs:
                 cmdx = run_cmds[cmdstr]
                 if blessed:
                     cmdstr = TERM.on_red(cmdstr)
-                    print "echo",cmdstr
+                    print("echo",cmdstr)
                 info ("command name: %s" % cmdstr)
                 info ("\t%s" % cmdx["command"])
 
@@ -522,19 +522,19 @@ case "$choice" in
 esac
 '''.format() )
 
-        print outbuff
+        print(outbuff)
 
     ## put in command dictionary
     cmddict["savelast"] = savelast
 
     def refresh_cmd(self, cmd,targ):
-        print 'GO9_go_targets="$(go9.py gotargets export)"'
+        print('GO9_go_targets="$(go9.py gotargets export)"')
         self.do_cmd("exportdirs")
         # reload go9.sh which is in my own directory
         go9ScriptFilename = os.path.join(os.path.dirname(__file__), 'go9.sh')
         go9ScriptFile = open(go9ScriptFilename)
         go9Script = go9ScriptFile.read()
-        print go9Script
+        print(go9Script)
 
     ## put in command dictionary
     cmddict["refresh"] = refresh_cmd
@@ -550,7 +550,7 @@ esac
         if self.config.cliargs.export:
             # handles the difference of sending a list to go9.sh for "export" commands
             # and "printing" which happens to stderr.
-            print " ".join(cmdstrs)
+            print(" ".join(cmdstrs))
         else:
             for cmdstr in cmdstrs:
                 cmdx = spc_cmds[cmdstr]
@@ -583,8 +583,8 @@ go9 spccmds
             #showline = path == cwd
             #if showline:
             #    formstr = 'echo "%s ==> {path}";\n' % keyfrag
-            #    print formstr.format(
-            #                    key=key, path=dct[key]["path"])
+            #    print(formstr.format(
+            #                    key=key, path=dct[key]["path"]))
         cwdary = cwd.split("/");
         cwdkey = ".".join(cwdary);
         parentary = cwdary[0:-1];
@@ -608,25 +608,26 @@ go9 spccmds
         childKeysAndTargs = map(getChildKeyAndTarg, childkeys)
         siblingKeysAndTargs = map(getSiblingKeyAndTarg, siblingkeys)
         if currentTarget:
-            print "echo current directory \({cd}\) is called \\'{targ}\\'".format(targ=currentTarget,
-                                                                            cd=cwdary[-1])
+            print("echo current directory \({cd}\) is called \\'{targ}\\'".format(targ=currentTarget,
+                                                                            cd=cwdary[-1]))
         else:
-            print "echo current directory \({cd}\) is not a go target".format(cd=cwdary[-1])
+            print("echo current directory \({cd}\) is not a go target".format(cd=cwdary[-1]))
+
         parentname = (parentDict["_target"]
                         if ("_target" in parentDict)
                         else "\<not named\>")
-        print "echo '  parent': \({parentname}\) \\'{parenttarget}\\'".format(
-            parentname=parentname, parenttarget=parentTarget)
-        print "echo children: {children}".format(
+        print("echo '  parent': \({parentname}\) \\'{parenttarget}\\'".format(
+            parentname=parentname, parenttarget=parentTarget))
+        print("echo children: {children}".format(
                                         children=
                                             ", ".join(childKeysAndTargs)
                                             if childkeys and len(childkeys) > 0
-                                            else "\<not named\>")
-        print "echo siblings: {siblings}".format(
+                                            else "\<not named\>"))
+        print("echo siblings: {siblings}".format(
                                         siblings=
                                             ", ".join(siblingKeysAndTargs)
                                             if siblingkeys and len(siblingkeys) > 0
-                                            else "\<not named\>")
+                                            else "\<not named\>"))
 
         # info(dict2pretty("currentDict", currentDict))
         # info(dict2pretty("parentDict", publicKeys(parentDict)))
@@ -647,7 +648,7 @@ class HelpAction(argparse.Action):
             raise ValueError("nargs not allowed")
         super(HelpAction, self).__init__(option_strings, dest, **kwargs)
     def __call__(self, parser, namespace, values, option_string=None):
-        print 'echo %r %r %r' % (namespace, values, option_string)
+        print(f'echo {namespace!r} {values!r} {option_string!r}))
 
 parser = ThrowingArgumentParser(description="Helper for go9 environment.",
             add_help=False)
@@ -669,7 +670,7 @@ parser.add_argument('-h', '--help', action= HelpAction)
 try:
     args = parser.parse_args()
 except:
-    print "echo Unknown argumentation. Use \\'go9 help\\' for more information."
+    print("echo Unknown argumentation. Use \\'go9 help\\' for more information.")
     sys.exit()
 
 # command, targ and default command
