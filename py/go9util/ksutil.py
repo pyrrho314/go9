@@ -1,5 +1,5 @@
-import termcolor as tc
-import partlocator
+from . import termcolor as tc
+from . import partlocator
 from pprint import pprint,pformat
 Error = Exception
 
@@ -56,7 +56,7 @@ def dict2pretty(name, var, indent=0, namewidth = None, complete = False, say_typ
              reprline = []
              for v in var:
                 reprline.append( repr(v))
-                if not isinstance(v, basestring):
+                if not isinstance(v, str):
                     allstr = False
              if allstr:
                 oneline = ", ".join(var)
@@ -91,7 +91,7 @@ def dict2pretty(name, var, indent=0, namewidth = None, complete = False, say_typ
             else: 
                 stype = repr(type(var))
             
-        if isinstance(var, basestring):
+        if isinstance(var, str):
             pvar = var.strip()
         else:
             pvar = repr(var)
@@ -249,7 +249,7 @@ def rand_file_id(length=12):
     return fname 
 
 def keysWithoutUnderscore(nDict):
-    keys = filter(lambda item: not isinstance(item, basestring) and not item.startsWith("_"), nDict.keys())
+    keys = filter(lambda item: not isinstance(item, str) and not item.startsWith("_"), nDict.keys())
     return keys;
 
 def dirReport (path2goDict, cwdkey):

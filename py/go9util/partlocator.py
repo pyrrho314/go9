@@ -1,6 +1,8 @@
 import re
-from go9util import ksutil
-from go9util import termcolor as tc
+# from go9util import ksutil
+# from go9util import termcolor as tc
+from . import ksutil
+from . import termcolor as tc
 
 class BadAddr:
     msg = "Bad Address"

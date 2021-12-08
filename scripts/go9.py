@@ -2,11 +2,8 @@
 import os,sys
 import json
 import argparse
-from go9util/partlocator
-
-partlocator = go9util.partlocator
-dict2pretty = go9util.ksutil.dict2pretty
-publicKeys = go9util.ksutil.publicKeys
+from go9util import partlocator
+from go9util.ksutil import dict2pretty, publicKeys
 
 try:
     import blessed
@@ -63,7 +60,7 @@ class Config(object):
         try:
             if cfgdict == None:
                 self._cfg_dict = self._default_start_dict()
-            elif isinstance(cfgdict, basestring):
+            elif isinstance(cfgdict, str):
                 self.filename = cfgdict
                 cfd = open(cfgdict)
                 configdict = json.load(cfd)
@@ -117,119 +114,7 @@ class Go9Command(object):
     paths = None
     # cmddict filled after each command function
     # thus declared classwide
-    cmddict = {
-        "add": {
-            "function": add,
-            "help": """
-go9 add <dir_key> -f
-    Used to add current directory
-                        """.strip()
-        },
-        #####################################33
-        "delete": {
-            "function": delete,
-            "help": """
-go9 delete <dir_key>
-    Used to delete a directory from the go table.
-                        """.strip()
-        },
-        #####################################33
-        "editall": {
-            "function": editall,
-            "subcmds": ["recurse"],
-            "help": """
-go9 editall [recurse]
-    Used to edit all appropriate file types. If recurse present, go
-    through sub-directories.  Currently the file types and editor
-    is hardcoded. TODO: set edit command and extensions in .go9 config.
-                                 """.strip()
-        },
-        #####################################33
-        "exportdirs": {
-            "function": exportdirs,
-            "help":"""
-go9 exportdirs
-    Used to create bash environment variables for each go9
-    directory. The vars are of the form GO9DIR_<dir_key>.
-                                    """.strip()
-        },
-        #####################################33
-        "help": {
-            "function":help,
-            "help": """
-go9 help <go9_cmd>
-    Used to get information about the commands in go9 tool.
-                        """.strip()
-        },
-        #####################################33
-        "go": {
-            "function": go,
-            "help": """
-go9 go <dir_key>
-go <dir_key>
-    Used to change to a target directory. If <dir_key> is
-    absent, all targets will be listed.
-                            """.strip()
-        },
-        #####################################33
-        "gotargets": gotargets,
-        "list": list,
-        "listcmds": listcmds,
-        "listsubcmds": { "function": listsubcmds },
-        "run": {
-            "function": run,
-            "help": """
-go9 run <run_key>
-    Used to execute a bash command.
-                                    """.strip(),
-            # subcmds filled in __init__
-        },
-        #####################################33
-        "rmturds": {
-            "function": rmturds,
-            "help":"""
-Used to remove editor droppings, 'rm *~'.
-                                    """.strip()
-        },
-        #####################################33
-        "runcmds": {
-            "function": runcmds,
-            "help": """
-go9 runcmds
-    Used to list the run_cmds.
-                                    """.strip()
-        },
-        #####################################33
-        "saveruncmd": {
-            "function": saveruncmd,
-            "help":"""
-go9 saveruncmd <run_name> "<cmd>"
-                                    """.strip()
-        },
-        #####################################33
-        "savelast": savelast,
-        #####################################33
-        "refresh": refresh_cmd,
-        #####################################33
-        # some commands want other commands as targets... for autocomplete
-        "help": {
-            "subcmds": cmddict.keys()
-        },
-        #####################################33
-        "listsubcmds": {
-            "subcmds": cmddict.keys()
-        },
-        #####################################33
-        "spccmds": {
-            "function": spccmds,
-            "help": """
-go9 spccmds
-    Used to list the spc_cmds (special commands such as 'editor').
-                                    """.strip()
-        },
-        #####################################33
-        "whereami": whereami,
-    }
+    cmddict = {}
     run_dict = None
 
 
@@ -244,6 +129,121 @@ go9 spccmds
     def __init__(self, config):
         go9cfg = None
         pathslist = []
+
+
+        self.cmddict = {
+        "add": {
+            "function": self.add,
+            "help": """
+go9 add <dir_key> -f
+    Used to add current directory
+                        """.strip()
+        },
+        #####################################33
+        "delete": {
+            "function": self.delete,
+            "help": """
+go9 delete <dir_key>
+    Used to delete a directory from the go table.
+                        """.strip()
+        },
+        #####################################33
+        "editall": {
+            "function": self.editall,
+            "subcmds": ["recurse"],
+            "help": """
+go9 editall [recurse]
+    Used to edit all appropriate file types. If recurse present, go
+    through sub-directories.  Currently the file types and editor
+    is hardcoded. TODO: set edit command and extensions in .go9 config.
+                                 """.strip()
+        },
+        #####################################33
+        "exportdirs": {
+            "function": self.exportdirs,
+            "help":"""
+go9 exportdirs
+    Used to create bash environment variables for each go9
+    directory. The vars are of the form GO9DIR_<dir_key>.
+                                    """.strip()
+        },
+        #####################################33
+        "help": {
+            "function": self.help,
+            "help": """
+go9 help <go9_cmd>
+    Used to get information about the commands in go9 tool.
+                        """.strip()
+        },
+        #####################################33
+        "go": {
+            "function": self.go,
+            "help": """
+go9 go <dir_key>
+go <dir_key>
+    Used to change to a target directory. If <dir_key> is
+    absent, all targets will be listed.
+                            """.strip()
+        },
+        #####################################33
+        "gotargets": self.gotargets,
+        "list": self.list,
+        "listcmds": self.listcmds,
+        "listsubcmds": { "function": Go9Command.listsubcmds },
+        "run": {
+            "function": self.run,
+            "help": """
+go9 run <run_key>
+    Used to execute a bash command.
+                                    """.strip(),
+            # subcmds filled in __init__
+        },
+        #####################################33
+        "rmturds": {
+            "function": self.rmturds,
+            "help":"""
+Used to remove editor droppings, 'rm *~'.
+                                    """.strip()
+        },
+        #####################################33
+        "runcmds": {
+            "function": self.runcmds,
+            "help": """
+go9 runcmds
+    Used to list the run_cmds.
+                                    """.strip()
+        },
+        #####################################33
+        "saveruncmd": {
+            "function": self.saveruncmd,
+            "help":"""
+go9 saveruncmd <run_name> "<cmd>"
+                                    """.strip()
+        },
+        #####################################33
+        "savelast": self.savelast,
+        #####################################33
+        "refresh": self.refresh_cmd,
+        #####################################33
+        # some commands want other commands as targets... for autocomplete
+        "help": {
+            "subcmds": self.cmddict.keys()
+        },
+        #####################################33
+        "listsubcmds": {
+            "subcmds": self.cmddict.keys()
+        },
+        #####################################33
+        "spccmds": {
+            "function": Go9Command.spccmds,
+            "help": """
+go9 spccmds
+    Used to list the spc_cmds (special commands such as 'editor').
+                                    """.strip()
+        },
+        #####################################33
+        "whereami": self.whereami,
+        }
 
         # info(config.pretty())
         self.run_dict = {}
@@ -277,7 +277,9 @@ go9 spccmds
             if not isinstance(cmddef, dict):
                 cmddef = {"function": cmddef}
 
-            cmddef["function"](self, cmd, targ)
+            # cmddef["function"](self, cmd, targ)
+            # info(f"cmd {cmd}")
+            cmddef["function"](cmd, targ)
         else:
             error("No such command: %s" % cmd)
 
@@ -362,7 +364,7 @@ go9 spccmds
         ne = None
         if spccmds != None:
             nedict = spccmds["new_editor"] if "new_editor" in spccmds else None
-            if isinstance(nedict,basestring):
+            if isinstance(nedict, str):
                 # repair
                 nedict = {"command": nedict}
                 ne = nedict["command"]
@@ -443,7 +445,7 @@ go9 spccmds
 
     def gotargets(self, cmd, targ):
         dct = self.go9dict
-        targs = dct.keys()
+        targs = list(dct.keys())
         targs.sort()
         if targ == "export":
             print(" ".join(targs))
