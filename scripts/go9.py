@@ -2,8 +2,11 @@
 import os,sys
 import json
 import argparse
-from go9util import partlocator
-from go9util.ksutil import dict2pretty, publicKeys
+from go9util/partlocator
+
+partlocator = go9util.partlocator
+dict2pretty = go9util.ksutil.dict2pretty
+publicKeys = go9util.ksutil.publicKeys
 
 try:
     import blessed
