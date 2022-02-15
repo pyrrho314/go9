@@ -596,7 +596,7 @@ esac
         cwd = os.path.abspath(os.path.curdir)
         path2go = {}
         dct = self.go9dict
-        keys = dct.keys()
+        keys = list(dct.keys())
         keys.sort()
         maxkeylen = len(max(keys, key= lambda p: len(p)))+1
         keyfrag = "{key: >%d}" % maxkeylen
