@@ -1,6 +1,8 @@
 import re
-from go9util import ksutil
-from go9util import termcolor as tc
+# from go9util import ksutil
+# from go9util import termcolor as tc
+from . import ksutil
+from . import termcolor as tc
 
 class BadAddr:
     msg = "Bad Address"
@@ -23,7 +25,7 @@ class AddrPart():
     
     def _get_next_struct(self):
         content = self.get_content()
-        # print "]gni]", self.__class__.__name__,self.key, self.index if hasattr(self, "index") else "-", self.struct
+        # "]gni]", self.__class__.__name__,self.key, self.index if hasattr(self, "index") else "-", self.struct
         return content
     next_struct = property(_get_next_struct)
     
@@ -100,15 +102,15 @@ class PartLocator():
                 nbits.append(bit)
         bits = nbits
         # handle lists
-        #print "bits>",nbits
+        # "bits>",nbits
         
         self.struct = struct
         cstruct = struct
         for i in range(len(bits)):
-            #print "cstruct",i,cstruct
+            # "cstruct",i,cstruct
             bit = bits[i]
             stype = type(cstruct)
-            #print "stype]",stype
+            # "stype]",stype
             m = re.match("\[(?P<index>[0-9])\]", bit)
             if cstruct == None:
                 if m:
@@ -149,10 +151,10 @@ class PartLocator():
                 if unmade:
                     a=unmade.create_location()
                     if clDBG:
-                        print "pl152: UNMADE:",unmade
+                        print(f"pl152: UNMADE: {unmade}")
                     latest.set_content(a)
                     if clDBG:
-                        print "pl154: clDBG:",latest
+                        print(f"pl154: clDBG: {latest}")
                 else:
                     done = True
             else:
@@ -162,7 +164,7 @@ class PartLocator():
     def get_reference(self):
         """this call returns a struct and key which can be used to get or set a value"""
         term = self.find_terminal()
-        # print "pl160:", term
+        # "pl160:", term
         if self.find_terminal():
             # supposed to return None if the location is accessible
             return (None, None)
@@ -204,7 +206,7 @@ class PartLocator():
                     val = self.pytype(val)
                 except:
                     # ok so we couldn't convert it
-                    #print "pl207: can't %s to %s for %s" % (val, self.pytype, self.propaddr)
+                    # "pl207: can't %s to %s for %s" % (val, self.pytype, self.propaddr)
                     val = None
                     
                     

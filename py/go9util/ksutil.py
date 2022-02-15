@@ -1,5 +1,5 @@
-import termcolor as tc
-import partlocator
+from . import termcolor as tc
+from . import partlocator
 from pprint import pprint,pformat
 Error = Exception
 
@@ -28,7 +28,7 @@ def dict2pretty(name, var, indent=0, namewidth = None, complete = False, say_typ
                                                     "extra": tabspc
                                                  }
         sub_namewidth = maxkeylen(var)
-        #print "ks19: sub_nw=", sub_namewidth
+        # "ks19: sub_nw=", sub_namewidth
         if len(var) == 0:
             retstr += "\n%(indent)s%(tab)s:::empty:::" % {"indent":fulltab,
                                                           "tab":tabspc
@@ -37,10 +37,10 @@ def dict2pretty(name, var, indent=0, namewidth = None, complete = False, say_typ
         keys.sort()
         for key in keys:
             value = var[key]
-            #print key,value
+            # key,value
             newstr = dict2pretty(key, value, indent+1, namewidth = sub_namewidth )
-            #print "ks28: indent =", indent, namewidth, _o_namewidth
-            #print "ks31: newstr", newstr
+            # "ks28: indent =", indent, namewidth, _o_namewidth
+            # "ks31: newstr", newstr
             retstr += newstr
             
     elif isinstance(var, list):
@@ -56,7 +56,7 @@ def dict2pretty(name, var, indent=0, namewidth = None, complete = False, say_typ
              reprline = []
              for v in var:
                 reprline.append( repr(v))
-                if not isinstance(v, basestring):
+                if not isinstance(v, str):
                     allstr = False
              if allstr:
                 oneline = ", ".join(var)
@@ -91,7 +91,7 @@ def dict2pretty(name, var, indent=0, namewidth = None, complete = False, say_typ
             else: 
                 stype = repr(type(var))
             
-        if isinstance(var, basestring):
+        if isinstance(var, str):
             pvar = var.strip()
         else:
             pvar = repr(var)
@@ -167,11 +167,11 @@ def context_args(context_args):
     means set the arg to True.  The value is eval-ed.
     """
     d = {}
-    # print "r25:", argl, argv
+    # "r25:", argl, argv
     if context_args:
         from datetime import datetime, date, timedelta
         for item in context_args:
-            # print "r27:",item
+            # "r27:",item
             expr = "".join(item)
             if  "=" in expr:
                 lrval  = expr.split("=")
@@ -249,7 +249,7 @@ def rand_file_id(length=12):
     return fname 
 
 def keysWithoutUnderscore(nDict):
-    keys = filter(lambda item: not isinstance(item, basestring) and not item.startsWith("_"), nDict.keys())
+    keys = filter(lambda item: not isinstance(item, str) and not item.startsWith("_"), nDict.keys())
     return keys;
 
 def dirReport (path2goDict, cwdkey):

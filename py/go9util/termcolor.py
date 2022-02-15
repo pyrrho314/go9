@@ -23,7 +23,6 @@
 
 """ANSII Color formatting for output in terminal."""
 
-from __future__ import print_function
 import os
 
 COLOR_ON = False
@@ -90,8 +89,7 @@ def line_color(*argl, **args):
     clines = []
     maxlinelen = 100
     maxlinelen = max([ len(ln) for ln in lines])
-    #msg = "tc90: maxlinelen = %s" % maxlinelen
-    #print (msg)
+    # msg = "tc90: maxlinelen = %s" % maxlinelen
     for line in lines:
         pad = " "*(maxlinelen-len(line))
         line = line+pad
