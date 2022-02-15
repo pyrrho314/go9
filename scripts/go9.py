@@ -455,7 +455,7 @@ go9 spccmds
     
     def list(self, cmd, targ):
         dct = self.go9dict
-        keys = dct.keys()
+        keys = list(dct.keys())
         if len(keys) == 0:
             print("echo No 'go' commands yet saved, use 'go9 add <tag>' to save current directory.")
             return
@@ -467,9 +467,8 @@ go9 spccmds
             if targ:
                 showline = targ in key
             if showline:
-                formstr = f'echo "{keyfrag} ==> {path}";\n'
-                print(formstr.format(
-                                key=key, path=dct[key]["path"]))
+                formstr = f'echo "{key} ==> {dct[key]["path"]}";\n'
+                print(formstr)
     
     def listcmds(self, cmd, targ):
         autocmds = self.cmddict.keys()
@@ -597,7 +596,7 @@ esac
         cwd = os.path.abspath(os.path.curdir)
         path2go = {}
         dct = self.go9dict
-        keys = dct.keys()
+        keys = list(dct.keys())
         keys.sort()
         maxkeylen = len(max(keys, key= lambda p: len(p)))+1
         keyfrag = "{key: >%d}" % maxkeylen
@@ -725,7 +724,12 @@ try:
     #  info("loading %s" % configname)
     config = Config(configname, cmdline_args = args)
     if configname == None:
-        config.save("{home}/.config/go9.conf".format(home = os.environ["HOME"]) )
+        home = os.environ["HOME"]
+        configDir = os.path.join(home, ".config")
+        newconfigname = os.path.join(configDir,"go9.conf")
+        if not os.path.exists(configDir):
+            os.makedirs(configDir)
+        config.save(newconfigname)
 except:
     #Exception("Can't Load %s" % configname)
     err("Can't Load %s" % configname)

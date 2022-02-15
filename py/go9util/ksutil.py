@@ -272,4 +272,4 @@ def publicKeys( obarg):
     else:
         cleanary = None
     
-    return cleanary
+    return list(cleanary)
