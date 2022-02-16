@@ -628,12 +628,17 @@ esac
             target = partlocator.get_property(path2go, cwdkey+"."+key+"._target")
             return "\({key}\) \\'{target}\\'".format(key=key, target=target)
         def getSiblingKeyAndTarg(key):
+            
             target = partlocator.get_property(path2go, parentkey+"."+key+"._target")
+            # don't report me as my own sibling
+            if (target == cwdary[-1]):
+                return "myself"
             return "\({key}\) \\'{target}\\'".format(key=key, target=target)
 
 
         childKeysAndTargs = map(getChildKeyAndTarg, childkeys)
         siblingKeysAndTargs = map(getSiblingKeyAndTarg, siblingkeys)
+        siblingKeysAndTargs = filter(lambda x: x != "myself", siblingKeysAndTargs)
         if currentTarget:
             print("echo current directory \({cd}\) is called \\'{targ}\\'".format(targ=currentTarget,
                                                                             cd=cwdary[-1]))
