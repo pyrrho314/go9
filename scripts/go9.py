@@ -2,6 +2,7 @@
 import os,sys
 import json
 import argparse
+import types
 from go9util import partlocator
 from go9util.ksutil import dict2pretty, publicKeys
 
@@ -227,11 +228,13 @@ go9 saveruncmd <run_name> "<cmd>"
         #####################################33
         # some commands want other commands as targets... for autocomplete
         "help": {
-            "subcmds": self.cmddict.keys()
+            "subcmds": self.cmddict.keys(),
+            "function": self.help,
         },
         #####################################33
         "listsubcmds": {
-            "subcmds": self.cmddict.keys()
+            "subcmds": self.cmddict.keys(),
+            "function": self.listsubcmds,
         },
         #####################################33
         "spccmds": {
@@ -270,12 +273,13 @@ go9 spccmds
         dct    = self.go9dict
         config = self.config
 
-        cmdlist = self.cmddict.keys()
-
+        cmdlist = list(self.cmddict.keys())
         if cmd in cmdlist:
             cmddef = self.cmddict[cmd]
             if not isinstance(cmddef, dict):
                 cmddef = {"function": cmddef}
+            
+            #info(f"cmddef={json.dumps(list(cmddef['subcmds']))}")
 
             # cmddef["function"](self, cmd, targ)
             # info(f"cmd {cmd}")
@@ -424,13 +428,14 @@ go9 spccmds
     def help(self, cmd, targ):
         if targ in self.cmddict:
             cd = self.cmddict[targ]
-            if "help" in cd:
+            cdhaskeys = hasattr(cd, '__iter__')
+            if cdhaskeys and ("help" in cd):
                 info(cd["help"])
             else:
                 info ("Sorry, no info on '%s'" % targ)
         else:
             info("go9 commands")
-            cmds = self.cmddict.keys()
+            cmds = list(self.cmddict.keys())
             cmds.sort()
             info("\t%s" % "\n\t".join(cmds))
     
