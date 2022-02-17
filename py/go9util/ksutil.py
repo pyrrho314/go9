@@ -270,6 +270,6 @@ def publicKeys( obarg):
     if (obarg):
         cleanary = filter( lambda x: x and len(x) and x[0] != "_", obarg.keys() )
     else:
-        cleanary = None
+        cleanary = [] # was None
     
     return list(cleanary)
