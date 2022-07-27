@@ -14,7 +14,7 @@ Clone the repository into $HOME/tools, e.g.:
 ```
 cd $HOME
 mkdir -p tools/go9
-cd go9
+cd tools/go9
 git clone https://github.com/pyrrho314/go9.git
 ```
 
