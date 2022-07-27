@@ -13,7 +13,7 @@ Tool for bash that helps move around development space. Requires only python.
 Clone the repository into $HOME/tools, e.g.:
 ```
 cd $HOME
-mkdir go9
+mkdir -p tools/go9
 cd go9
 git clone https://github.com/pyrrho314/go9.git
 ```
