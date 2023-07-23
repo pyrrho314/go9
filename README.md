@@ -18,8 +18,7 @@ cd tools
 git clone https://github.com/pyrrho314/go9.git
 ```
 
-Then add the following to
-.bashrc:
+Change to home directory `cd $HOME` and then add the following to .bashrc:
 
 ```
 # go9
