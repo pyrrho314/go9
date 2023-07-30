@@ -4,9 +4,9 @@ Tool for bash that helps move around development space. Requires only python.
 ## Installation
 ### Idea
 
-0. You need the go9 scripts directory with go9.sh and go9.py in PATH
+1. You need the go9 scripts directory with go9.sh and go9.py in PATH
 1. you need the python utility directory (with go9util) in PYTHONPATH
-2. you will need to source go9.sh since it modifies your extant environment
+1. you will need to source go9.sh since it modifies your extant environment
 
 ### Instructions
 
@@ -18,7 +18,8 @@ cd tools
 git clone https://github.com/pyrrho314/go9.git
 ```
 
-Change to home directory `cd $HOME` and then add the following to .bashrc:
+Then add the following to
+.bashrc:
 
 ```
 # go9
