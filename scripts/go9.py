@@ -513,7 +513,8 @@ go9 spccmds
 
     def runcmds(self, cmd, targ):
         run_cmds = self.config.get("run_cmds", {})
-        cmdstrs = run_cmds.keys()
+        #   info(f'xyz: {run_cmds}')
+        cmdstrs = list(run_cmds.keys())
         cmdstrs.sort()
         if self.config.cliargs.export:
             # handles the difference of sending a list to go9.sh for "export" commands
