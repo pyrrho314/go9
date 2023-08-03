@@ -1,4 +1,12 @@
 #!/usr/bin/env python3
+
+# go9.py  
+# The role of this program is to generate executable bash script.
+# The code is executed by the go9 bash environment functions
+# placed in the environment when go9.sh is sourced in the users
+# .bashrc
+#
+
 import os,sys
 import json
 import argparse
@@ -12,6 +20,20 @@ try:
 except:
     blessed = None
     TERM=None
+
+
+#############                                                                 #
+#
+# Notice:
+#
+# * When this program "prints" something, it's sent to bash.
+#   The output needs to be a valid bash command.
+#     `print("ls -laF")`
+#
+# * To "print" stuff to be read, use `info(..)` or `error(..)`                
+#                                                                             #
+                                                                  #############
+
 
 def err(msg):
     sys.stderr.write(msg)
@@ -513,7 +535,6 @@ go9 spccmds
 
     def runcmds(self, cmd, targ):
         run_cmds = self.config.get("run_cmds", {})
-        #   info(f'xyz: {run_cmds}')
         cmdstrs = list(run_cmds.keys())
         cmdstrs.sort()
         if self.config.cliargs.export:
