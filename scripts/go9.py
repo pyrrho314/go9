@@ -535,8 +535,6 @@ go9 spccmds
 
     def runcmds(self, cmd, targ):
         run_cmds = self.config.get("run_cmds", {})
-        cmdsstr = json.dumps(run_cmds);
-        # info(f"\ngp519\n '{cmdsstr}'")
         cmdstrs = list(run_cmds.keys())
         cmdstrs.sort()
         if self.config.cliargs.export:
