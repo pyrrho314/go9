@@ -102,7 +102,7 @@ _comp_run()
     case ${COMP_CWORD} in
         1)
             # echo "in comp func" $GO9_subcmds
-            runtargs=$(go9.py --export runcmds )
+            runtargs=$(go9.py --export listruncmds )
             COMPREPLY=($(compgen -W "$runtargs" ${cur}))
             ;;
         2)
