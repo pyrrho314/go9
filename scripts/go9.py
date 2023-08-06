@@ -229,10 +229,10 @@ Used to remove editor droppings, 'rm *~'.
                                     """.strip()
         },
         #####################################33
-        "runcmds": {
-            "function": self.runcmds,
+        "listruncmds": {
+            "function": self.listruncmds,
             "help": """
-go9 runcmds
+go9 listruncmds
     Used to list the run_cmds.
                                     """.strip()
         },
@@ -533,7 +533,7 @@ go9 spccmds
         else:
             info("No such run command: %s" % targ)
 
-    def runcmds(self, cmd, targ):
+    def listruncmds(self, cmd, targ):
         run_cmds = self.config.get("run_cmds", {})
         cmdstrs = list(run_cmds.keys())
         cmdstrs.sort()
