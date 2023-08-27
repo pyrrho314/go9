@@ -260,7 +260,7 @@ go9 saveruncmd <run_name> "<cmd>"
         },
         #####################################33
         "spccmds": {
-            "function": Go9Command.spccmds,
+            "function": self.spccmds,
             "help": """
 go9 spccmds
     Used to list the spc_cmds (special commands such as 'editor').
@@ -607,7 +607,7 @@ esac
 
     def spccmds(self, cmd, targ):
         spc_cmds = self.config.get("spc_cmds", {})
-        cmdstrs = spc_cmds.keys()
+        cmdstrs = list(spc_cmds.keys())
         cmdstrs.sort()
         if self.config.cliargs.export:
             # handles the difference of sending a list to go9.sh for "export" commands
