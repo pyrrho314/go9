@@ -673,10 +673,11 @@ esac
             print("echo current directory \({cd}\) is not a go target".format(cd=cwdary[-1]))
 
         parentname = (parentDict["_target"]
-                        if ("_target" in parentDict)
+                        if (parentDict and ("_target" in parentDict))
                         else "\<not named\>")
-        print("echo '  parent': \({parentname}\) \\'{parenttarget}\\'".format(
-            parentname=parentname, parenttarget=parentTarget))
+        print("echo '  parent': {parentname} {parenttarget}".format(
+            parentname=parentname, parenttarget=f"'{parentTarget}'" if parentTarget else ""))
+        
         print("echo children: {children}".format(
                                         children=
                                             ", ".join(childKeysAndTargs)
