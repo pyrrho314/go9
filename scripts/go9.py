@@ -358,7 +358,7 @@ go9 spccmds
         removedone = False
         newlist = []
         rmlist = []
-        for onepath in paths:
+        for onepath in self.paths:
             tkey = onepath["go_name"]
             if tkey == targ:
                 rmlist.append(onepath)
