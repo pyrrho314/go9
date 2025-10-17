@@ -1,5 +1,6 @@
 # purpose is to add the paths only once in an environment where
 # dpenv, etc are meant to be liberally sourced
+# i.e. this is idempotent
 
 newp=$1
 case ":$PATH:" in

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 declare -A GO9_tt #target table
 
 #! . nenv $* # SETS some useful environment variables

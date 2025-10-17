@@ -557,10 +557,10 @@ go9 spccmds
         # How lastcmd works:
         #   get history of 2 steps, cut off the history #,
 
-        lastcmd  = 'history 2 | cut -d " " -f 3- | head -n 1 | sed -e "s/^[[:space:]]*//g" -e "s/[[:space:]]*\$//g"'
-        outbuff = '_GO9_lastcmd="$({lastcmd})"\n'.format(lastcmd=lastcmd)
+        lastcmd  = r'history 2 | cut -d " " -f 3- | head -n 1 | sed -e "s/^[[:space:]]*//g" -e "s/[[:space:]]*\$//g"'
+        outbuff = r'_GO9_lastcmd="$({lastcmd})"\n'.format(lastcmd=lastcmd)
         outbuff += (
-'''read -p "Use '$_GO9_lastcmd' (y/n)?" choice
+r'''read -p "Use '$_GO9_lastcmd' (y/n)?" choice
 case "$choice" in
    y|Y )
         echo choosing " $_GO9_lastcmd";;
@@ -573,7 +573,6 @@ esac
 '''.format() )
 
         print(outbuff)
-
     def refresh_cmd(self, cmd,targ):
         print('GO9_go_targets="$(go9.py gotargets export)"')
         self.do_cmd("exportdirs")
@@ -631,40 +630,40 @@ esac
 
         def getChildKeyAndTarg(key):
             target = partlocator.get_property(path2go, cwdkey+"."+key+"._target")
-            return "\({key}\) \\'{target}\\'".format(key=key, target=target)
+            return r"\({key}\) \\'{target}\\'".format(key=key, target=target)
         def getSiblingKeyAndTarg(key):
             
             target = partlocator.get_property(path2go, parentkey+"."+key+"._target")
             # don't report me as my own sibling
             if (target == cwdary[-1]):
                 return "myself"
-            return "\({key}\) \\'{target}\\'".format(key=key, target=target)
+            return r"\({key}\) \\'{target}\\'".format(key=key, target=target)
 
 
         childKeysAndTargs = map(getChildKeyAndTarg, childkeys)
         siblingKeysAndTargs = map(getSiblingKeyAndTarg, siblingkeys)
         siblingKeysAndTargs = filter(lambda x: x != "myself", siblingKeysAndTargs)
         if currentTarget:
-            print("echo current directory \({cd}\) is called \\'{targ}\\'".format(targ=currentTarget,
+            print(r"echo current directory \({cd}\) is called \\'{targ}\\'".format(targ=currentTarget,
                                                                             cd=cwdary[-1]))
         else:
-            print("echo current directory \({cd}\) is not a go target".format(cd=cwdary[-1]))
+            print(r"echo current directory \({cd}\) is not a go target".format(cd=cwdary[-1]))
 
         parentname = (parentDict["_target"]
                         if ("_target" in parentDict)
-                        else "\<not named\>")
-        print("echo '  parent': \({parentname}\) \\'{parenttarget}\\'".format(
+                        else r"\<not named\>")
+        print(r"echo '  parent': \({parentname}\) \\'{parenttarget}\\'".format(
             parentname=parentname, parenttarget=parentTarget))
-        print("echo children: {children}".format(
+        print(r"echo children: {children}".format(
                                         children=
                                             ", ".join(childKeysAndTargs)
                                             if childkeys and len(childkeys) > 0
-                                            else "\<not named\>"))
-        print("echo siblings: {siblings}".format(
+                                            else r"\<not named\>"))
+        print(r"echo siblings: {siblings}".format(
                                         siblings=
                                             ", ".join(siblingKeysAndTargs)
                                             if siblingkeys and len(siblingkeys) > 0
-                                            else "\<not named\>"))
+                                            else r"\<not named\>"))
 
         # info(dict2pretty("currentDict", currentDict))
         # info(dict2pretty("parentDict", publicKeys(parentDict)))
